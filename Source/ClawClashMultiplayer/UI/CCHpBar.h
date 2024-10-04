@@ -6,6 +6,7 @@
 #include "ClawClashMultiplayer/UI/CCWorldSpaceWidget.h"
 #include "CCHpBar.generated.h"
 
+class UHealthComponent;
 /**
  * 
  */
@@ -14,4 +15,18 @@ class CLAWCLASHMULTIPLAYER_API UCCHpBar : public UCCWorldSpaceWidget
 {
 	GENERATED_BODY()
 	
+public:
+	void Init(UHealthComponent* InHealthComponent);
+
+protected:
+	virtual void NativeConstruct() override;
+
+	UFUNCTION()
+	void UpdateHpBar(int32 NewCurrentHealth, int32 MaxHp);
+
+	UPROPERTY()
+	TWeakObjectPtr<UHealthComponent> HealthComponent; 
+	
+	UPROPERTY(meta = (BindWidget))
+	class UProgressBar* HpBar;
 };

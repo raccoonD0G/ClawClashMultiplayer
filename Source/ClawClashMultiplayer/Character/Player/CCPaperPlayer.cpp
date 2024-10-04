@@ -12,8 +12,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ClawClashMultiplayer/Managers/LayerManager/CCLayerManager.h"
-#include "ClawClashMultiplayer/Components/HealthComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "ClawClashMultiplayer/Components/HealthComponent.h"
 
 
 ACCPaperPlayer::ACCPaperPlayer() : Super()
@@ -65,9 +65,6 @@ ACCPaperPlayer::ACCPaperPlayer() : Super()
 	FollowCamera->PostProcessSettings.MotionBlurAmount = 0.0f;
 	FollowCamera->ProjectionMode = ECameraProjectionMode::Orthographic;
 	FollowCamera->OrthoWidth = 12000.0;
-
-	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
-	HealthComponent->Init(MaxHp);
 
 	if (IdleAnimation)
 	{
@@ -147,6 +144,12 @@ void ACCPaperPlayer::Tick(float DeltaTime)
 	default:
 		break;
 	}
+}
+
+void ACCPaperPlayer::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	HealthComponent = GetComponentByClass<UHealthComponent>();
 }
 
 void ACCPaperPlayer::UpdateIdle()
@@ -328,5 +331,9 @@ void ACCPaperPlayer::Jump()
 float ACCPaperPlayer::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCause)
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCause);
+	if (HealthComponent)
+	{
+		HealthComponent->GetDamaged(DamageAmount);
+	}
 	return 0.0f;
 }

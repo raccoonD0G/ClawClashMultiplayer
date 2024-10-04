@@ -17,9 +17,7 @@ enum class EBulldogState : uint8
 	Rush UMETA(DisplayName = "Rush"),
 };
 
-class UPlayerDetectorComponent;
 class UDamageSphereComponent;
-
 /**
  * 
  */
@@ -37,10 +35,6 @@ public:
 public:
 	virtual void FaceDirection(FVector Dir) override;
 
-// Component Section
-protected:
-	TObjectPtr<UPlayerDetectorComponent> PlayerDetectorComponent;
-	
 // State Section
 protected:
 	EBulldogState CurrentState;

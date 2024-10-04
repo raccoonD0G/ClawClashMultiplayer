@@ -2,25 +2,39 @@
 
 
 #include "ClawClashMultiplayer/Components/HealthComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
-
-	// ...
+	MaxHp = 100;
+	CurrentHp = 100;
+	SetIsReplicatedByDefault(true);
 }
 
+void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-// Called when the game starts
+	DOREPLIFETIME(UHealthComponent, MaxHp);
+	DOREPLIFETIME(UHealthComponent, CurrentHp);
+}
+
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	CurrentHp = MaxHp;
+}
 
-	// ...
-	
+void UHealthComponent::OnRep_CurrentHp()
+{
+	OnHealthChanged.Broadcast(CurrentHp, MaxHp);
+}
+
+void UHealthComponent::OnRep_MaxHp()
+{
+	OnHealthChanged.Broadcast(CurrentHp, MaxHp);
 }
 
 void UHealthComponent::Init(int32 NewMaxHp)
@@ -36,6 +50,8 @@ void UHealthComponent::GetDamaged(int32 Amount)
 	{
 		GetOwner()->Destroy();
 	}
+
+	OnHealthChanged.Broadcast(CurrentHp, MaxHp);
 }
 
 void UHealthComponent::GetHeal(int32 Amount)
@@ -45,5 +61,7 @@ void UHealthComponent::GetHeal(int32 Amount)
 	{
 		CurrentHp = MaxHp;
 	}
+
+	OnHealthChanged.Broadcast(CurrentHp, MaxHp);
 }
 

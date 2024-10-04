@@ -8,10 +8,10 @@
 #include "ClawClashMultiplayer/Components/PlayerDetectorComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ClawClashMultiplayer/Components/DamageSphereComponent.h"
+#include "ClawClashMultiplayer/Components/HealthBarWidgetComponent.h"
 
 ACCPaperBulldog::ACCPaperBulldog() : Super()
 {
-	PlayerDetectorComponent = CreateDefaultSubobject<UPlayerDetectorComponent>(TEXT("PlayerDetectorComponent"));
 	MoveSpeed = 600.0f;
 	RushMoveSpeed = 3000.0f;
 	IsRightStart = false;

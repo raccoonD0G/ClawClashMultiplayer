@@ -8,7 +8,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealthChangedDelegate, int32, NewCurrentHealth, int32, MaxHp);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CLAWCLASHMULTIPLAYER_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -16,6 +16,7 @@ class CLAWCLASHMULTIPLAYER_API UHealthComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UHealthComponent();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void Init(int32 NewMaxHp);
 
 protected:
@@ -24,16 +25,25 @@ protected:
 
 // Health Section
 protected:
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHp)
 	int32 CurrentHp;
 
-	UPROPERTY(EditAnywhere, Category = "Hp")
+	UFUNCTION()
+	void OnRep_CurrentHp();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hp", ReplicatedUsing = OnRep_MaxHp)
 	int32 MaxHp;
+
+	UFUNCTION()
+	void OnRep_MaxHp();
 
 public:
 	FHealthChangedDelegate OnHealthChanged;
 
 	void GetDamaged(int32 Amount);
+
 	void GetHeal(int32 Amount);
-	FORCEINLINE float GetHealthRatio() { return CurrentHp / MaxHp; }
+
+	FORCEINLINE float GetHealthRatio() { return (float)CurrentHp / ((MaxHp == 0) ? 1.0f : (float)MaxHp); }
 		
 };

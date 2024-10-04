@@ -9,6 +9,7 @@
 #include "CCPaperPlayer.generated.h"
 
 class UHealthComponent;
+
 /**
  * 
  */
@@ -25,6 +26,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void PostInitializeComponents() override;
 
 	void UpdateIdle();
 	void UpdateMove();
@@ -98,12 +100,9 @@ protected:
 
 // Damage Section
 protected:
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCause) override;
+
 	UPROPERTY()
 	TObjectPtr<UHealthComponent> HealthComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 MaxHp;
-
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCause) override;
 
 };

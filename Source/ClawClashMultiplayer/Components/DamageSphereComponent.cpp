@@ -26,7 +26,6 @@ void UDamageSphereComponent::BeginPlay()
 
 void UDamageSphereComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    // 범위 내에 들어온 액터가 유효하고 자신이 아닌 경우
     if (OtherActor && OtherActor != GetOwner())
     {
         ACCPaperPlayer* Player = Cast<ACCPaperPlayer>(OtherActor);

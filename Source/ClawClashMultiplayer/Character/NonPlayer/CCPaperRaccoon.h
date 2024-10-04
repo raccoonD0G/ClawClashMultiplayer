@@ -16,9 +16,7 @@ enum class ERaccoonState : uint8
 	Attack UMETA(DisplayName = "Attack"),
 };
 
-class UPlayerDetectorComponent;
 class UDamageSphereComponent;
-
 /**
  * 
  */
@@ -35,10 +33,6 @@ public:
 // Sprite Section
 public:
 	virtual void FaceDirection(FVector Dir) override;
-	
-// Component Section
-protected:
-	TObjectPtr<UPlayerDetectorComponent> PlayerDetectorComponent;
 
 // State Section
 protected:

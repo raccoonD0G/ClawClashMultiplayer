@@ -8,10 +8,10 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ClawClashMultiplayer/Components/DamageSphereComponent.h"
+#include <ClawClashMultiplayer/Components/HealthBarWidgetComponent.h>
 
 ACCPaperRaccoon::ACCPaperRaccoon() : Super()
 {
-	PlayerDetectorComponent = CreateDefaultSubobject<UPlayerDetectorComponent>(TEXT("PlayerDetectorComponent"));
 	IsRightStart = false;
 }
 

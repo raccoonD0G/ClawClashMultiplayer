@@ -15,7 +15,7 @@ struct FRushMemory
 	
 public:
 	UPROPERTY()
-	TObjectPtr<ICCRushable> Rushable;
+	TScriptInterface<ICCRushable> Rushable;
 	FVector Direction;
 	float RushTime;
 	float CurrentRushTime;

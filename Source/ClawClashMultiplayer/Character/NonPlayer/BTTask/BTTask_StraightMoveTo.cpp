@@ -23,7 +23,7 @@ EBTNodeResult::Type UBTTask_StraightMoveTo::ExecuteTask(UBehaviorTreeComponent& 
         return EBTNodeResult::Failed;
     }
 
-    ICCMoveable* Moveable = Cast<ICCMoveable>(AIController->GetPawn());
+    TScriptInterface<ICCMoveable> Moveable = TScriptInterface<ICCMoveable>(AIController->GetPawn());
     if (!Moveable)
     {
         return EBTNodeResult::Failed;

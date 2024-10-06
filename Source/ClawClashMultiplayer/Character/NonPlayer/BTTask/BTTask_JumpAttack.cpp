@@ -31,7 +31,7 @@ EBTNodeResult::Type UBTTask_JumpAttack::ExecuteTask(UBehaviorTreeComponent& Owne
 		return EBTNodeResult::Failed;
 	}
 
-	ICCJumpAttackable* JumpAttackable = Cast<ICCJumpAttackable>(Controller->GetPawn());
+	TScriptInterface<ICCJumpAttackable> JumpAttackable = TScriptInterface<ICCJumpAttackable>(Controller->GetPawn());
 	if (!JumpAttackable)
 	{
 		return EBTNodeResult::Failed;

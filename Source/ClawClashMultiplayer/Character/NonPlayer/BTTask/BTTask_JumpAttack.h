@@ -15,7 +15,7 @@ struct FJumpAttackMemory
 
 public:
 	UPROPERTY()
-	TObjectPtr<ICCJumpAttackable> JumpAttakable;
+	TScriptInterface<ICCJumpAttackable> JumpAttakable;
 
 	float JumpTime;
 	float CurrentJumpTime;

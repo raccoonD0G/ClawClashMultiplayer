@@ -32,7 +32,7 @@ EBTNodeResult::Type UBTTask_Rush::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
         return EBTNodeResult::Failed;
     }
 
-    ICCRushable* Rushable = Cast<ICCRushable>(ControlledCharacter);
+    TScriptInterface<ICCRushable> Rushable = TScriptInterface<ICCRushable>(ControlledCharacter);
     if (Rushable == nullptr)
     {
         return EBTNodeResult::Failed;

@@ -5,8 +5,19 @@
 #include "CoreMinimal.h"
 #include "ClawClashMultiplayer/Character/CCPaperCharacter.h"
 #include "InputActionValue.h"
-#include "CCPlayerState.h"
 #include "CCPaperPlayer.generated.h"
+
+
+
+UENUM(BlueprintType)
+enum class EPlayerState : uint8
+{
+	Idle UMETA(DisplayName = "Idle"),
+	Jump UMETA(DisplayName = "Jump"),
+	Move UMETA(DisplayName = "Move"),
+	Falling UMETA(DisplayName = "Falling"),
+	Land UMETA(DisplayName = "Land")
+};
 
 class UHealthComponent;
 

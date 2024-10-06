@@ -14,7 +14,7 @@ struct FMoveMemory
 	
 public:
 	UPROPERTY()
-	TObjectPtr<ICCMoveable> Moveable;
+	TScriptInterface<ICCMoveable> Moveable;
 };
 /**
  * 

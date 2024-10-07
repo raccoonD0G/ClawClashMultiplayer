@@ -5,6 +5,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "ClawClashMultiplayer/PlayerState/CCTeamPlayerState.h"
 
+ACCEntryGameMode::ACCEntryGameMode()
+{
+	bUseSeamlessTravel = true;
+}
+
 void ACCEntryGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);

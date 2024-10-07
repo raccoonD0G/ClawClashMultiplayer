@@ -8,13 +8,12 @@
 void UCCOccupyIndicator::Init(ACCTree* InTree)
 {
 	TargetTree = InTree;
+	TargetTree->OnPercentChanged.AddDynamic(this, &UCCOccupyIndicator::SetOccupyIndicatorPercent);
 }
 
 void UCCOccupyIndicator::NativeConstruct()
 {
 	Super::NativeConstruct();
-	TargetTree->OnPercentChanged.AddDynamic(this, &UCCOccupyIndicator::SetOccupyIndicatorPercent);
-
 }
 
 void UCCOccupyIndicator::SetOccupyIndicatorPercent(float Percent)

@@ -14,6 +14,9 @@ class CLAWCLASHMULTIPLAYER_API ACCPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+public:
+	ACCPlayerController();
+
 protected:
 	virtual void BeginPlay() override;
 };

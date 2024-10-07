@@ -5,6 +5,11 @@
 #include "CCPaperPlayer.h"
 #include "EngineUtils.h"
 
+ACCPlayerController::ACCPlayerController()
+{
+	bReplicates = true;
+}
+
 void ACCPlayerController::BeginPlay()
 {
 	Super::BeginPlay();

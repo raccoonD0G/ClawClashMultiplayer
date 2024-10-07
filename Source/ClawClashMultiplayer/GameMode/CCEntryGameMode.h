@@ -14,6 +14,9 @@ class CLAWCLASHMULTIPLAYER_API ACCEntryGameMode : public ACCGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	ACCEntryGameMode();
+
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 

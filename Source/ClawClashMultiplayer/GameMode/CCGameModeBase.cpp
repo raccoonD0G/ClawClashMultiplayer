@@ -16,4 +16,6 @@ ACCGameModeBase::ACCGameModeBase()
 	{
 		PlayerControllerClass = PlayerControllerClassRef.Class;
 	}
+
+	bUseSeamlessTravel = true;
 }

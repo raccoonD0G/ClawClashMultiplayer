@@ -24,6 +24,7 @@
 #include "ClawClashMultiplayer/Spawner/CCSpawnerSpawner.h"
 #include "Net/UnrealNetwork.h"
 #include "ClawClashMultiplayer/StageMap/CCFieldTrigger.h"
+#include "ClawClashMultiplayer/StageMap/CCTree.h"
 
 ACCTileMapActor::ACCTileMapActor()
 {
@@ -104,6 +105,23 @@ void ACCTileMapActor::BeginPlay()
         }
     }
 
+
+    TSet<int32> TreeFieldIndexs;
+    while (TreeFieldIndexs.Num() < 10)
+    {
+        TreeFieldIndexs.Add(FMath::RandRange(0, FieldArr.Num() - 1));
+    }
+
+    for (int32 Index : TreeFieldIndexs)
+    {
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+        FVector TreePos(FMath::RandRange(GetWorldSpaceStartPos(FieldArr[Index]).X, GetWorldSpaceEndPos(FieldArr[Index]).X), 0, GetWorldSpaceStartPos(FieldArr[Index]).Z);
+        ACCTree* Tree = GetWorld()->SpawnActor<ACCTree>(TreeClass, TreePos, FRotator::ZeroRotator, SpawnParams);
+        Trees.Add(Tree);
+    }
+    
+
     FieldTileMapComponent->RebuildCollision();
 }
 
@@ -115,6 +133,7 @@ void ACCTileMapActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
     DOREPLIFETIME(ACCTileMapActor, SpriteComponentInfoArr);
     DOREPLIFETIME(ACCTileMapActor, FieldColliderArr);
     DOREPLIFETIME(ACCTileMapActor, FieldTriggerArr);
+    DOREPLIFETIME(ACCTileMapActor, Trees);
     
 }
 
@@ -647,4 +666,8 @@ FSpawnableField ACCTileMapActor::ChangeIntoSpawnableField(UCCField* Field, ESpaw
     FVector EndPos = GetWorldSpaceEndPos(Field);
     EndPos.Z += GetTileWidth();
     return FSpawnableField(StartPos, EndPos, SpawnableType, MaxCharacterNum);
+}
+
+void ACCTileMapActor::OnRep_Trees()
+{
 }

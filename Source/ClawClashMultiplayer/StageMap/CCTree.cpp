@@ -14,8 +14,8 @@ ACCTree::ACCTree()
 	PrimaryActorTick.bCanEverTick = true;
 	MaxOccupation = 100;
 	RedOccupation = 50;
-
-	BoxComponent = GetComponentByClass<UBoxComponent>();
+	OccupySpeend = 10.0f;
+	bReplicates = true;
 }
 
 void ACCTree::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -31,9 +31,20 @@ void ACCTree::BeginPlay()
 	
 	if (HasAuthority())
 	{
-		BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &ACCTree::OnOverlapBegin);
-		BoxComponent->OnComponentEndOverlap.AddDynamic(this, &ACCTree::OnOverlapEnd);
+		if (BoxComponent)
+		{
+			BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &ACCTree::OnOverlapBegin);
+			BoxComponent->OnComponentEndOverlap.AddDynamic(this, &ACCTree::OnOverlapEnd);
+		}
 	}
+
+	OnPercentChanged.Broadcast(GetRedOccupationPercent());
+}
+
+void ACCTree::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	BoxComponent = GetComponentByClass<UBoxComponent>();
 }
 
 // Called every frame
@@ -41,16 +52,31 @@ void ACCTree::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (BluePlayer && !RedPlayer)
+	if (HasAuthority())
 	{
-		RedOccupation -= DeltaTime;
-		OnPercentChanged.Broadcast(GetRedOccupationPercent());
+		if (BluePlayer && !RedPlayer)
+		{
+			SetRedOccupation(RedOccupation - DeltaTime * OccupySpeend);
+		}
+		else if (RedPlayer && !BluePlayer)
+		{
+			SetRedOccupation(RedOccupation + DeltaTime * OccupySpeend);
+		}
+
+		if (RedOccupation < 0.01f)
+		{
+			SetCurrentState(TreeState::BlueOccupied);
+		}
+		else if (RedOccupation > MaxOccupation - 0.01f)
+		{
+			SetCurrentState(TreeState::RedOccupied);
+		}
+		else
+		{
+			SetCurrentState(TreeState::Neutral);
+		}
 	}
-	else if (RedPlayer && !BluePlayer)
-	{
-		RedOccupation += DeltaTime;
-		OnPercentChanged.Broadcast(GetRedOccupationPercent());
-	}
+	
 }
 
 void ACCTree::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -123,7 +149,14 @@ void ACCTree::SetCurrentState(TreeState InState)
 	CurrentState = InState;
 }
 
+void ACCTree::SetRedOccupation(float InRedOccupation)
+{
+	RedOccupation = FMathf::Clamp(InRedOccupation, 0.0f, MaxOccupation);
+	OnPercentChanged.Broadcast(GetRedOccupationPercent());
+}
+
 void ACCTree::OnRep_RedOccupation()
 {
+	OnPercentChanged.Broadcast(GetRedOccupationPercent());
 }
 

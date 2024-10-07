@@ -31,6 +31,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
 public:	
 	// Called every frame
@@ -67,14 +68,18 @@ public:
 protected:
 	float MaxOccupation;
 
+	float OccupySpeend;
+
 	UPROPERTY(ReplicatedUsing = OnRep_RedOccupation)
 	float RedOccupation;
+
+	void SetRedOccupation(float InRedOccupation);
 
 	UFUNCTION()
 	void OnRep_RedOccupation();
 
 public:
-	FORCEINLINE int32 GetRedOccupation() { return RedOccupation; }
-	FORCEINLINE int32 GetBlueOccupation() { return MaxOccupation - RedOccupation; }
-	FORCEINLINE int32 GetRedOccupationPercent() { return FMathf::Clamp(RedOccupation / MaxOccupation, 0.0f, 1.0f); }
+	FORCEINLINE float GetRedOccupation() { return RedOccupation; }
+	FORCEINLINE float GetBlueOccupation() { return MaxOccupation - RedOccupation; }
+	FORCEINLINE float GetRedOccupationPercent() { return FMathf::Clamp(RedOccupation / MaxOccupation, 0.0f, 1.0f); }
 };

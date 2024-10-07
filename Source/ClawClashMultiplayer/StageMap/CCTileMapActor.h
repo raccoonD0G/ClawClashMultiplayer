@@ -21,6 +21,7 @@ class UPaperSprite;
 struct FSpawnableField;
 class ACCSpawnerSpawner;
 class UCCFieldTrigger;
+class ACCTree;
 
 USTRUCT()
 struct FPlatformEdge
@@ -289,4 +290,15 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn")
     TObjectPtr<ACCSpawnerSpawner> SpawnerSpawner;
+
+// Tree Section
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
+    TSubclassOf<ACCTree> TreeClass;
+
+    UPROPERTY(ReplicatedUsing = OnRep_Trees)
+    TArray<TObjectPtr<ACCTree>> Trees;
+
+    UFUNCTION()
+    void OnRep_Trees();
 };

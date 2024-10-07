@@ -29,7 +29,7 @@ protected:
 
 // Team Section
 protected:
-	UPROPERTY(ReplicatedUsing = OnRep_Team)
+	UPROPERTY(ReplicatedUsing = OnRep_Team, VisibleAnywhere, BlueprintReadOnly)
 	PlayerTeam Team;
 
 	UFUNCTION()

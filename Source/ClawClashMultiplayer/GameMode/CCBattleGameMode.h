@@ -14,4 +14,9 @@ class CLAWCLASHMULTIPLAYER_API ACCBattleGameMode : public ACCGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	ACCBattleGameMode();
+
+protected:
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 };

@@ -37,6 +37,7 @@ ACCPaperPlayer::ACCPaperPlayer() : Super()
 	GetCharacterMovement()->SetPlaneConstraintAxisSetting(EPlaneConstraintAxisSetting::Y);
 	GetCharacterMovement()->bConstrainToPlane = true;
 	GetCharacterMovement()->SetPlaneConstraintNormal(FVector(0.0f, 1.0f, 0.0f));
+	MaxJumpForce = 10000.0f;
 
 	// Capsule
 	GetCapsuleComponent()->SetCapsuleRadius(200.0f);
@@ -71,6 +72,8 @@ ACCPaperPlayer::ACCPaperPlayer() : Super()
 		GetSprite()->SetFlipbook(IdleAnimation);
 	}
 
+	GetSprite()->SetIsReplicated(true);
+
 	FVector NewLocation = GetActorLocation();
 	NewLocation.Y = UCCLayerManager::GetPlayerY();
 	SetActorLocation(NewLocation);
@@ -85,16 +88,16 @@ void ACCPaperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
-
-	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACCPaperPlayer::ReadyJump);
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACCPaperPlayer::LeftRightMove);
+	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACCPaperPlayer::Server_StartReadyJump);
+	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACCPaperPlayer::Server_ReleaseJump);
 }
 
 void ACCPaperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetCurrentState(EPlayerState::Idle);
+	Server_SetCurrentState(EPlayerState::Idle);
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
@@ -119,31 +122,47 @@ void ACCPaperPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	switch (CurrentState)
+	if (HasAuthority())
 	{
-	case EPlayerState::Idle:
-		UpdateIdle();
-		break;
+		switch (CurrentState)
+		{
+		case EPlayerState::Idle:
+			UpdateIdle();
+			break;
 
-	case EPlayerState::Jump:
-		UpdateJump();
-		break;
+		case EPlayerState::ReadyJump:
+			UpdateReadyJump(DeltaTime);
+			break;
 
-	case EPlayerState::Move:
-		UpdateMove();
-		break;
+		case EPlayerState::KeepReadyJump:
+			UpdateKeepReadyJump(DeltaTime);
+			break;
 
-	case EPlayerState::Land:
-		UpdateLand();
-		break;
+		case EPlayerState::Jump:
+			UpdateJump();
+			break;
 
-	case EPlayerState::Falling:
-		UpdateFalling();
-		break;
+		case EPlayerState::Move:
+			UpdateMove();
+			break;
 
-	default:
-		break;
+		case EPlayerState::Land:
+			UpdateLand();
+			break;
+
+		case EPlayerState::Falling:
+			UpdateFalling();
+			break;
+
+		case EPlayerState::KeepFalling:
+			UpdateKeepFalling();
+			break;
+
+		default:
+			break;
+		}
 	}
+	
 }
 
 void ACCPaperPlayer::PostInitializeComponents()
@@ -154,61 +173,53 @@ void ACCPaperPlayer::PostInitializeComponents()
 
 void ACCPaperPlayer::UpdateIdle()
 {
-	if (ShouldJump == true)
+	float Speed = GetVelocity().Size();
+	if (GetCharacterMovement()->IsMovingOnGround() && Speed > PlayerIdleThreshold)
 	{
-		SetCurrentState(EPlayerState::Jump);
+		Server_SetCurrentState(EPlayerState::Move);
 	}
-	else
-	{
-		float Speed = GetVelocity().Size();
-		if (GetCharacterMovement()->IsMovingOnGround() && Speed > PlayerIdleThreshold)
-		{
-			SetCurrentState(EPlayerState::Move);
-		}
 
-		if (GetCharacterMovement()->IsFalling())
-		{
-			SetCurrentState(EPlayerState::Falling);
-		}
+	if (GetCharacterMovement()->IsFalling())
+	{
+		Server_SetCurrentState(EPlayerState::Falling);
 	}
 }
 
 void ACCPaperPlayer::UpdateMove()
 {
-	if (ShouldJump == true)
+	float Speed = GetVelocity().Size();
+	if (GetCharacterMovement()->IsMovingOnGround() && Speed <= PlayerIdleThreshold)
 	{
-		SetCurrentState(EPlayerState::Jump);
+		Server_SetCurrentState(EPlayerState::Idle);
 	}
-	else
-	{
-		float Speed = GetVelocity().Size();
-		if (GetCharacterMovement()->IsMovingOnGround() && Speed <= PlayerIdleThreshold)
-		{
-			SetCurrentState(EPlayerState::Idle);
-		}
 
-		if (GetCharacterMovement()->IsFalling())
-		{
-			SetCurrentState(EPlayerState::Falling);
-		}
+	if (GetCharacterMovement()->IsFalling())
+	{
+		Server_SetCurrentState(EPlayerState::Falling);
 	}
+}
+
+void ACCPaperPlayer::UpdateReadyJump(float DeltaTime)
+{
+	JumpReadyTime += DeltaTime;
+	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
+	if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
+	{
+		Server_SetCurrentState(EPlayerState::KeepReadyJump);
+	}
+}
+
+void ACCPaperPlayer::UpdateKeepReadyJump(float DeltaTime)
+{
+	JumpReadyTime += DeltaTime;
 }
 
 void ACCPaperPlayer::UpdateJump()
 {
 	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
-	if (CurrentFrame == 3 && ShouldJump == true)
+	if (CurrentFrame > 3)
 	{
-		if (GetCharacterMovement()->IsFalling() == false) Jump();
-		ShouldJump = false;
-	}
-	else if (CurrentFrame > 3)
-	{
-		SetCurrentState(EPlayerState::Falling);
-	}
-	else if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
-	{
-		GetSprite()->Stop();
+		Server_SetCurrentState(EPlayerState::Falling);
 	}
 }
 
@@ -217,7 +228,7 @@ void ACCPaperPlayer::UpdateLand()
 	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
 	if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
 	{
-		SetCurrentState(EPlayerState::Idle);
+		Server_SetCurrentState(EPlayerState::Idle);
 	}
 }
 
@@ -226,11 +237,19 @@ void ACCPaperPlayer::UpdateFalling()
 	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
 	if (GetCharacterMovement()->IsMovingOnGround())
 	{
-		SetCurrentState(EPlayerState::Land);
+		Server_SetCurrentState(EPlayerState::Land);
 	}
 	else if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
 	{
-		GetSprite()->Stop();
+		Server_SetCurrentState(EPlayerState::KeepFalling);
+	}
+}
+
+void ACCPaperPlayer::UpdateKeepFalling()
+{
+	if (GetCharacterMovement()->IsMovingOnGround())
+	{
+		Server_SetCurrentState(EPlayerState::Land);
 	}
 }
 
@@ -238,6 +257,12 @@ void ACCPaperPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCPaperPlayer, ServerPlayerYaw);
+	DOREPLIFETIME(ACCPaperPlayer, CurrentState);
+}
+
+void ACCPaperPlayer::OnRep_CurrentState()
+{
+	SetAnimation();
 }
 
 void ACCPaperPlayer::OnRep_ServerPlayerYaw()
@@ -247,15 +272,29 @@ void ACCPaperPlayer::OnRep_ServerPlayerYaw()
 	GetSprite()->SetWorldRotation(Rotator);
 }
 
-
-void ACCPaperPlayer::SetCurrentState(EPlayerState NewState)
+void ACCPaperPlayer::Server_SetCurrentState_Implementation(EPlayerState NewState)
 {
 	CurrentState = NewState;
+	SetAnimation();
+}
+
+void ACCPaperPlayer::SetAnimation()
+{
 	switch (CurrentState)
 	{
 	case EPlayerState::Idle:
 		GetSprite()->Play();
 		GetSprite()->SetFlipbook(IdleAnimation);
+		break;
+
+	case EPlayerState::ReadyJump:
+		GetSprite()->Play();
+		GetSprite()->SetFlipbook(ReadyJumpAnimation);
+		break;
+
+	case EPlayerState::KeepReadyJump:
+		GetSprite()->Play();
+		GetSprite()->SetFlipbook(KeepReadyJumpAnimation);
 		break;
 
 	case EPlayerState::Jump:
@@ -278,6 +317,11 @@ void ACCPaperPlayer::SetCurrentState(EPlayerState NewState)
 		GetSprite()->SetFlipbook(FallingAnimation);
 		break;
 
+	case EPlayerState::KeepFalling:
+		GetSprite()->Play();
+		GetSprite()->SetFlipbook(KeepFallingAnimation);
+		break;
+
 	default:
 		break;
 	}
@@ -287,7 +331,7 @@ void ACCPaperPlayer::LeftRightMove(const FInputActionValue& Value)
 {
 	FVector2D InputVector = Value.Get<FVector2D>();
 	
-	if (CurrentState == EPlayerState::Jump) return;
+	if (CurrentState == EPlayerState::Jump || CurrentState == EPlayerState::ReadyJump || CurrentState == EPlayerState::KeepReadyJump) return;
 
 	AddMovementInput(FVector(1.f, 0.f, 0.f), InputVector.X * 1.0f);
 
@@ -310,22 +354,23 @@ void ACCPaperPlayer::Server_LeftRightMove_Implementation(const FVector2D InputVe
 	ServerPlayerYaw = Rotator.Yaw;
 }
 
-void ACCPaperPlayer::ReadyJump()
+void ACCPaperPlayer::Server_StartReadyJump_Implementation()
 {
 	if (GetCharacterMovement()->IsFalling() == false)
 	{
-		ShouldJump = true;
+		Server_SetCurrentState(EPlayerState::ReadyJump);
 	}
 }
 
-void ACCPaperPlayer::Jump()
+void ACCPaperPlayer::Server_ReleaseJump_Implementation()
 {
-	Super::Jump();
-
-	FVector ForwardVector = GetSprite()->GetRelativeTransform().GetScale3D();
-	FVector JumpVelocity = FVector(ForwardVector.X * JumpStrength, 0.0f, JumpHeight);
-
-	LaunchCharacter(JumpVelocity, true, true);
+	if (CurrentState == EPlayerState::ReadyJump || CurrentState == EPlayerState::KeepReadyJump)
+	{
+		Server_SetCurrentState(EPlayerState::Jump);
+		float JumpForce = FMath::Clamp(JumpReadyTime / MaxReadyTime, 0.0f, 1.0f) * MaxJumpForce;
+		LaunchCharacter(FVector(0, 0, JumpForce), false, true);
+		JumpReadyTime = 0.0f;
+	}
 }
 
 float ACCPaperPlayer::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCause)

@@ -14,8 +14,11 @@ enum class EPlayerState : uint8
 {
 	Idle UMETA(DisplayName = "Idle"),
 	Jump UMETA(DisplayName = "Jump"),
+	ReadyJump UMETA(DisplayName = "ReadyJump"),
+	KeepReadyJump UMETA(DisplayName = "KeepReadyJump"),
 	Move UMETA(DisplayName = "Move"),
 	Falling UMETA(DisplayName = "Falling"),
+	KeepFalling UMETA(DisplayName = "KeepFalling"),
 	Land UMETA(DisplayName = "Land")
 };
 
@@ -32,7 +35,12 @@ class CLAWCLASHMULTIPLAYER_API ACCPaperPlayer : public ACCPaperCharacter
 public:
 	ACCPaperPlayer();
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	void SetCurrentState(EPlayerState NewState);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetCurrentState(EPlayerState NewState);
+	void Server_SetCurrentState_Implementation(EPlayerState NewState);
+
+	void SetAnimation();
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,17 +49,22 @@ protected:
 
 	void UpdateIdle();
 	void UpdateMove();
+	void UpdateReadyJump(float DeltaTime);
+	void UpdateKeepReadyJump(float DeltaTime);
 	void UpdateJump();
 	void UpdateLand();
 	void UpdateFalling();
+	void UpdateKeepFalling();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	float PlayerIdleThreshold = 0.1f;
-	bool ShouldJump = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentState, EditAnywhere, BlueprintReadOnly)
 	EPlayerState CurrentState;
+
+	UFUNCTION()
+	void OnRep_CurrentState();
 
 // Transform Section
 protected:
@@ -72,8 +85,7 @@ protected:
 //Input Section
 protected:
 
-	float JumpStrength = 0.0f;
-	float JumpHeight = 0.0f;
+	float MaxJumpForce = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> JumpAction;
@@ -85,12 +97,22 @@ protected:
 	TObjectPtr<class UInputMappingContext> InputMappingContext;
 	
 	void LeftRightMove(const FInputActionValue& Value);
+
 	UFUNCTION(Server, Reliable)
 	void Server_LeftRightMove(const FVector2D InputVector);
 	void Server_LeftRightMove_Implementation(const FVector2D InputVector);
 
-	void ReadyJump();
-	virtual void Jump() override;
+	UFUNCTION(Server, Reliable)
+	void Server_StartReadyJump();
+	void Server_StartReadyJump_Implementation();
+
+	UFUNCTION(Server, Reliable)
+	void Server_ReleaseJump();
+	void Server_ReleaseJump_Implementation();
+
+	float JumpReadyTime = 0.0f;
+	const float MaxReadyTime = 1.0f;
+
 
 //Animation Section
 protected:
@@ -98,7 +120,13 @@ protected:
 	TObjectPtr<class UPaperFlipbook> IdleAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UPaperFlipbook> ReadyJumpAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UPaperFlipbook> JumpAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UPaperFlipbook> KeepReadyJumpAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UPaperFlipbook> LandAnimation;
@@ -108,6 +136,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UPaperFlipbook> FallingAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UPaperFlipbook> KeepFallingAnimation;
 
 // Damage Section
 protected:

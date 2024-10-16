@@ -18,5 +18,6 @@ public:
 	ACCBattleGameMode();
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 };

@@ -28,6 +28,7 @@ UCCStageMapManager* UCCStageMapManager::GetInstance()
     if (Instance == nullptr || !Instance->IsValidLowLevel())
     {
         Instance = NewObject<UCCStageMapManager>();
+        Instance->AddToRoot();
         Instance->Init();
     }
     return Instance;

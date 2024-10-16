@@ -7,6 +7,7 @@
 #include "CCHpBar.generated.h"
 
 class UHealthComponent;
+class UProgressBar;
 /**
  * 
  */
@@ -28,5 +29,5 @@ protected:
 	TWeakObjectPtr<UHealthComponent> HealthComponent; 
 	
 	UPROPERTY(meta = (BindWidget))
-	class UProgressBar* HpBar;
+	TObjectPtr<UProgressBar> HpBar;
 };

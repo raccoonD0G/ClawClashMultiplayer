@@ -14,6 +14,7 @@
 #include "ClawClashMultiplayer/Managers/LayerManager/CCLayerManager.h"
 #include "Net/UnrealNetwork.h"
 #include "ClawClashMultiplayer/Components/HealthComponent.h"
+#include "ClawClashMultiplayer/Components/WeaponComponent.h"
 
 
 ACCPaperPlayer::ACCPaperPlayer() : Super()
@@ -79,8 +80,8 @@ ACCPaperPlayer::ACCPaperPlayer() : Super()
 	SetActorLocation(NewLocation);
 
 	bReplicates = true;
-	GetSprite()->SetIsReplicated(true);
-	SetReplicateMovement(true);
+
+	PreviousInputVector = FVector2D::Zero();
 }
 
 void ACCPaperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -89,15 +90,17 @@ void ACCPaperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACCPaperPlayer::LeftRightMove);
+	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ACCPaperPlayer::LeftRightMoveCompleted);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACCPaperPlayer::Server_StartReadyJump);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACCPaperPlayer::Server_ReleaseJump);
+	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ACCPaperPlayer::Attack);
 }
 
 void ACCPaperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Server_SetCurrentState(EPlayerState::Idle);
+	SetCurrentState(EPlayerState::Idle);
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
@@ -158,30 +161,34 @@ void ACCPaperPlayer::Tick(float DeltaTime)
 			UpdateKeepFalling();
 			break;
 
+		case EPlayerState::Attack:
+			UpdateAttack();
+			break;
+
 		default:
 			break;
 		}
 	}
-	
 }
 
 void ACCPaperPlayer::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	HealthComponent = GetComponentByClass<UHealthComponent>();
+	WeaponComponent = GetComponentByClass<UWeaponComponent>();
 }
 
 void ACCPaperPlayer::UpdateIdle()
-{
+{	
 	float Speed = GetVelocity().Size();
 	if (GetCharacterMovement()->IsMovingOnGround() && Speed > PlayerIdleThreshold)
 	{
-		Server_SetCurrentState(EPlayerState::Move);
+		SetCurrentState(EPlayerState::Move);
 	}
 
 	if (GetCharacterMovement()->IsFalling())
 	{
-		Server_SetCurrentState(EPlayerState::Falling);
+		SetCurrentState(EPlayerState::Falling);
 	}
 }
 
@@ -190,12 +197,12 @@ void ACCPaperPlayer::UpdateMove()
 	float Speed = GetVelocity().Size();
 	if (GetCharacterMovement()->IsMovingOnGround() && Speed <= PlayerIdleThreshold)
 	{
-		Server_SetCurrentState(EPlayerState::Idle);
+		SetCurrentState(EPlayerState::Idle);
 	}
 
 	if (GetCharacterMovement()->IsFalling())
 	{
-		Server_SetCurrentState(EPlayerState::Falling);
+		SetCurrentState(EPlayerState::Falling);
 	}
 }
 
@@ -205,7 +212,7 @@ void ACCPaperPlayer::UpdateReadyJump(float DeltaTime)
 	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
 	if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
 	{
-		Server_SetCurrentState(EPlayerState::KeepReadyJump);
+		SetCurrentState(EPlayerState::KeepReadyJump);
 	}
 }
 
@@ -219,7 +226,7 @@ void ACCPaperPlayer::UpdateJump()
 	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
 	if (CurrentFrame > 3)
 	{
-		Server_SetCurrentState(EPlayerState::Falling);
+		SetCurrentState(EPlayerState::Falling);
 	}
 }
 
@@ -228,7 +235,7 @@ void ACCPaperPlayer::UpdateLand()
 	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
 	if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
 	{
-		Server_SetCurrentState(EPlayerState::Idle);
+		SetCurrentState(EPlayerState::Idle);
 	}
 }
 
@@ -237,11 +244,11 @@ void ACCPaperPlayer::UpdateFalling()
 	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
 	if (GetCharacterMovement()->IsMovingOnGround())
 	{
-		Server_SetCurrentState(EPlayerState::Land);
+		SetCurrentState(EPlayerState::Land);
 	}
 	else if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
 	{
-		Server_SetCurrentState(EPlayerState::KeepFalling);
+		SetCurrentState(EPlayerState::KeepFalling);
 	}
 }
 
@@ -249,7 +256,16 @@ void ACCPaperPlayer::UpdateKeepFalling()
 {
 	if (GetCharacterMovement()->IsMovingOnGround())
 	{
-		Server_SetCurrentState(EPlayerState::Land);
+		SetCurrentState(EPlayerState::Land);
+	}
+}
+
+void ACCPaperPlayer::UpdateAttack()
+{
+	int32 CurrentFrame = GetSprite()->GetPlaybackPositionInFrames();
+	if (CurrentFrame == GetSprite()->GetFlipbook()->GetNumFrames() - 1)
+	{
+		SetCurrentState(EPlayerState::Idle);
 	}
 }
 
@@ -272,10 +288,13 @@ void ACCPaperPlayer::OnRep_ServerPlayerYaw()
 	GetSprite()->SetWorldRotation(Rotator);
 }
 
-void ACCPaperPlayer::Server_SetCurrentState_Implementation(EPlayerState NewState)
+void ACCPaperPlayer::SetCurrentState(EPlayerState NewState)
 {
-	CurrentState = NewState;
-	SetAnimation();
+	if (HasAuthority())
+	{
+		CurrentState = NewState;
+		SetAnimation();
+	}
 }
 
 void ACCPaperPlayer::SetAnimation()
@@ -322,6 +341,11 @@ void ACCPaperPlayer::SetAnimation()
 		GetSprite()->SetFlipbook(KeepFallingAnimation);
 		break;
 
+	case EPlayerState::Attack:
+		GetSprite()->Play();
+		GetSprite()->SetFlipbook(AttackAnimation);
+		break;
+
 	default:
 		break;
 	}
@@ -330,16 +354,30 @@ void ACCPaperPlayer::SetAnimation()
 void ACCPaperPlayer::LeftRightMove(const FInputActionValue& Value)
 {
 	FVector2D InputVector = Value.Get<FVector2D>();
-	
-	if (CurrentState == EPlayerState::Jump || CurrentState == EPlayerState::ReadyJump || CurrentState == EPlayerState::KeepReadyJump) return;
+
+	if (CurrentState == EPlayerState::Jump || CurrentState == EPlayerState::ReadyJump || CurrentState == EPlayerState::KeepReadyJump || CurrentState == EPlayerState::Attack) return;
 
 	AddMovementInput(FVector(1.f, 0.f, 0.f), InputVector.X * 1.0f);
 
-	Server_LeftRightMove(InputVector);
+	if (PreviousInputVector.X != InputVector.X)
+	{
+		PreviousInputVector = InputVector;
+		Server_LeftRightMove(InputVector);
+	}
 }
+
+void ACCPaperPlayer::LeftRightMoveCompleted(const FInputActionValue& Value)
+{
+	PreviousInputVector = FVector2D::Zero();
+	FVector2D InputVector = Value.Get<FVector2D>();
+	Server_LeftRightMoveCompleted(InputVector);
+}
+
 
 void ACCPaperPlayer::Server_LeftRightMove_Implementation(const FVector2D InputVector)
 {
+	PreviousInputVector = InputVector;
+
 	FRotator Rotator = GetActorRotation();
 
 	if (InputVector.X < 0)
@@ -354,11 +392,16 @@ void ACCPaperPlayer::Server_LeftRightMove_Implementation(const FVector2D InputVe
 	ServerPlayerYaw = Rotator.Yaw;
 }
 
+void ACCPaperPlayer::Server_LeftRightMoveCompleted_Implementation(const FVector2D InputVector)
+{
+	PreviousInputVector = FVector2D::Zero();
+}
+
 void ACCPaperPlayer::Server_StartReadyJump_Implementation()
 {
 	if (GetCharacterMovement()->IsFalling() == false)
 	{
-		Server_SetCurrentState(EPlayerState::ReadyJump);
+		SetCurrentState(EPlayerState::ReadyJump);
 	}
 }
 
@@ -366,7 +409,7 @@ void ACCPaperPlayer::Server_ReleaseJump_Implementation()
 {
 	if (CurrentState == EPlayerState::ReadyJump || CurrentState == EPlayerState::KeepReadyJump)
 	{
-		Server_SetCurrentState(EPlayerState::Jump);
+		SetCurrentState(EPlayerState::Jump);
 		float JumpForce = FMath::Clamp(JumpReadyTime / MaxReadyTime, 0.0f, 1.0f) * MaxJumpForce;
 		LaunchCharacter(FVector(0, 0, JumpForce), false, true);
 		JumpReadyTime = 0.0f;
@@ -381,4 +424,29 @@ float ACCPaperPlayer::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 		HealthComponent->GetDamaged(DamageAmount);
 	}
 	return 0.0f;
+}
+
+void ACCPaperPlayer::Attack(const FInputActionValue& Value)
+{
+	if (CurrentState == EPlayerState::Falling || CurrentState == EPlayerState::KeepFalling || CurrentState == EPlayerState::Jump || CurrentState == EPlayerState::ReadyJump || CurrentState == EPlayerState::KeepReadyJump || CurrentState == EPlayerState::Attack) return;
+	
+	Server_Attack(Value);
+}
+
+void ACCPaperPlayer::Server_Attack_Implementation(const FInputActionValue& Value)
+{
+	SetCurrentState(EPlayerState::Attack);
+	Multicast_Attack(Value);
+	if (WeaponComponent)
+	{
+		WeaponComponent->DoAttack();
+	}
+}
+
+void ACCPaperPlayer::Multicast_Attack_Implementation(const FInputActionValue& Value)
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->DoAttack();
+	}
 }

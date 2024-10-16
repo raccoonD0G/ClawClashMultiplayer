@@ -6,6 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "CCPlayerController.generated.h"
 
+class UUserWidget;
+class UCCBattleWidget;
+
 /**
  * 
  */
@@ -19,4 +22,13 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* aPawn) override;
+	virtual void OnRep_Pawn() override;
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> BattleWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UCCBattleWidget> BattleWidget;
 };

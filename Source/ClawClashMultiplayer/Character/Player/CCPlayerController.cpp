@@ -4,6 +4,9 @@
 #include "CCPlayerController.h"
 #include "CCPaperPlayer.h"
 #include "EngineUtils.h"
+#include "Blueprint/UserWidget.h"
+#include "ClawClashMultiplayer/UI/CCBattleWidget.h"
+#include "ClawClashMultiplayer/Components/ExpComponent.h"
 
 ACCPlayerController::ACCPlayerController()
 {
@@ -16,4 +19,38 @@ void ACCPlayerController::BeginPlay()
 
 	FInputModeGameAndUI InputMode;
 	SetInputMode(InputMode);
+}
+
+void ACCPlayerController::OnPossess(APawn* aPawn)
+{
+    Super::OnPossess(aPawn);
+}
+
+void ACCPlayerController::OnRep_Pawn()
+{
+    Super::OnRep_Pawn();
+
+    if (!GetPawn())
+    {
+        return;
+    }
+
+    if (IsLocalController())
+    {
+        if (BattleWidgetClass)
+        {
+            BattleWidget = CreateWidget<UCCBattleWidget>(GetWorld(), BattleWidgetClass);
+
+            if (BattleWidget)
+            {
+                
+                if (GetPawn()->FindComponentByClass<UExpComponent>())
+                {
+                    BattleWidget->Init(GetPawn()->FindComponentByClass<UExpComponent>());
+                }
+
+                BattleWidget->AddToViewport();
+            }
+        }
+    }
 }

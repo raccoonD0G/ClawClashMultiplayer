@@ -10,6 +10,11 @@ ACCBattleGameMode::ACCBattleGameMode()
 	bUseSeamlessTravel = true;
 }
 
+void ACCBattleGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void ACCBattleGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	ACCTeamPlayerState* OldPlayerState = Cast<ACCTeamPlayerState>(C->PlayerState);

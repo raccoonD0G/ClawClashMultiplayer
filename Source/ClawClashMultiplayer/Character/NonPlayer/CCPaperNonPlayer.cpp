@@ -22,9 +22,13 @@ ACCPaperNonPlayer::ACCPaperNonPlayer() : Super()
 
 void ACCPaperNonPlayer::BeginDestroy()
 {
-    OnNonPlayerCharacterDestroyed.Broadcast(this);
-
     Super::BeginDestroy();
+}
+
+void ACCPaperNonPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    OnNonPlayerCharacterEndPlay.Broadcast(this);
+    Super::EndPlay(EndPlayReason);
 }
 
 void ACCPaperNonPlayer::Tick(float DeltaSeconds)

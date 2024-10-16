@@ -7,8 +7,6 @@
 #include "InputActionValue.h"
 #include "CCPaperPlayer.generated.h"
 
-
-
 UENUM(BlueprintType)
 enum class EPlayerState : uint8
 {
@@ -19,10 +17,12 @@ enum class EPlayerState : uint8
 	Move UMETA(DisplayName = "Move"),
 	Falling UMETA(DisplayName = "Falling"),
 	KeepFalling UMETA(DisplayName = "KeepFalling"),
-	Land UMETA(DisplayName = "Land")
+	Land UMETA(DisplayName = "Land"),
+	Attack
 };
 
 class UHealthComponent;
+class UWeaponComponent;
 
 /**
  * 
@@ -36,9 +36,7 @@ public:
 	ACCPaperPlayer();
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetCurrentState(EPlayerState NewState);
-	void Server_SetCurrentState_Implementation(EPlayerState NewState);
+	void SetCurrentState(EPlayerState NewState);
 
 	void SetAnimation();
 
@@ -55,6 +53,7 @@ protected:
 	void UpdateLand();
 	void UpdateFalling();
 	void UpdateKeepFalling();
+	void UpdateAttack();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -82,7 +81,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCameraComponent> FollowCamera;
 	
-//Input Section
+// Input Section
 protected:
 
 	float MaxJumpForce = 0.0f;
@@ -94,13 +93,21 @@ protected:
 	TObjectPtr<class UInputAction> MoveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> AttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputMappingContext> InputMappingContext;
 	
 	void LeftRightMove(const FInputActionValue& Value);
+	void LeftRightMoveCompleted(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Reliable)
 	void Server_LeftRightMove(const FVector2D InputVector);
 	void Server_LeftRightMove_Implementation(const FVector2D InputVector);
+
+	UFUNCTION(Server, Reliable)
+	void Server_LeftRightMoveCompleted(const FVector2D InputVector);
+	void Server_LeftRightMoveCompleted_Implementation(const FVector2D InputVector);
 
 	UFUNCTION(Server, Reliable)
 	void Server_StartReadyJump();
@@ -113,6 +120,8 @@ protected:
 	float JumpReadyTime = 0.0f;
 	const float MaxReadyTime = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector2D PreviousInputVector;
 
 //Animation Section
 protected:
@@ -140,6 +149,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UPaperFlipbook> KeepFallingAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UPaperFlipbook> AttackAnimation;
+
 // Damage Section
 protected:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCause) override;
@@ -147,4 +159,35 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UHealthComponent> HealthComponent;
 
+// Upgrade Section
+protected:
+	TArray<TFunctionRef<float()>> JumpPowerMultipliers;
+
+	TArray<TFunctionRef<float()>> MoveSpeedMultipliers;
+
+	TArray<TFunctionRef<float()>> AttackPowerMultipliers;
+
+	TArray<TFunctionRef<float()>> OccupySpeedMultipliers;
+
+public:
+	FORCEINLINE void AddJumpPowerMultipliers(TFunctionRef<float()> Func) { JumpPowerMultipliers.Add(Func); }
+	FORCEINLINE void AddMoveSpeedMultipliers(TFunctionRef<float()> Func) { MoveSpeedMultipliers.Add(Func); }
+	FORCEINLINE void AddAttackPowerMultipliers(TFunctionRef<float()> Func) { AttackPowerMultipliers.Add(Func); }
+	FORCEINLINE void AddOccupySpeedMultipliers(TFunctionRef<float()> Func) { OccupySpeedMultipliers.Add(Func); }
+
+// Attack Section
+protected:
+	UPROPERTY()
+	TObjectPtr<UWeaponComponent> WeaponComponent;
+
+	UFUNCTION()
+	void Attack(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Attack(const FInputActionValue& Value);
+	void Server_Attack_Implementation(const FInputActionValue& Value);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Attack(const FInputActionValue& Value);
+	void Multicast_Attack_Implementation(const FInputActionValue& Value);
 };

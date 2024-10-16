@@ -83,20 +83,20 @@ void ACCTree::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 {
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		APawn* Pawn = Cast<APawn>(OtherActor);
-		if (Pawn)
+		ACCPaperPlayer* Player = Cast<ACCPaperPlayer>(OtherActor);
+		if (Player)
 		{
-			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(Pawn->GetController()->PlayerState);
+			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(Player->GetController()->PlayerState);
 			if (TeamPlayerState)
 			{
 				PlayerTeam Team = TeamPlayerState->GetTeam();
 				switch (Team)
 				{
 				case PlayerTeam::Blue:
-					BluePlayer = Cast<ACCPaperPlayer>(OtherActor);
+					BluePlayer = Player;
 					break;
 				case PlayerTeam::Red:
-					RedPlayer = Cast<ACCPaperPlayer>(OtherActor);
+					RedPlayer = Player;
 					break;
 				default:
 					break;
@@ -110,10 +110,10 @@ void ACCTree::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherAct
 {
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		APawn* Pawn = Cast<APawn>(OtherActor);
-		if (Pawn)
+		ACCPaperPlayer* Player = Cast<ACCPaperPlayer>(OtherActor);
+		if (Player)
 		{
-			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(Pawn->GetController()->PlayerState);
+			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(Player->GetController()->PlayerState);
 			if (TeamPlayerState)
 			{
 				PlayerTeam Team = TeamPlayerState->GetTeam();

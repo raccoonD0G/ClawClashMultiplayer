@@ -7,7 +7,7 @@
 #include "ClawClashMultiplayer/Interfaces/CCMoveable.h"
 #include "CCPaperNonPlayer.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNonPlayerCharacterDestroyed, ACCPaperNonPlayer*, DestroyedCharacter);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNonPlayerCharacterEndPlay, ACCPaperNonPlayer*, DestroyedCharacter);
 
 /**
  * 
@@ -19,11 +19,11 @@ class CLAWCLASHMULTIPLAYER_API ACCPaperNonPlayer : public ACCPaperCharacter, pub
 	
 public:
 	ACCPaperNonPlayer();
-	FOnNonPlayerCharacterDestroyed OnNonPlayerCharacterDestroyed;
+	FOnNonPlayerCharacterEndPlay OnNonPlayerCharacterEndPlay;
 
 protected:
 	virtual void BeginDestroy() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaSeconds) override;
 
 // Sprite Section

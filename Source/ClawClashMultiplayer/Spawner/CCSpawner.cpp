@@ -42,17 +42,19 @@ void ACCSpawner::SpawnCharacter()
 		ACCPaperNonPlayer* SpawnedCharacter = GetWorld()->SpawnActor<ACCPaperNonPlayer>(SpawnClass, SpawnPos, FRotator::ZeroRotator, SpawnParameters);
 		if (SpawnedCharacter)
 		{
-			SpawnedCharacter->OnNonPlayerCharacterDestroyed.AddDynamic(this, &ACCSpawner::OnBeginDestroy);
+			SpawnedCharacter->OnNonPlayerCharacterEndPlay.AddDynamic(this, &ACCSpawner::OnBeginDestroy);
 			SpawnedCharacter->Init(LeftEnd.X, RightEnd.X);
 			Charaters.Add(SpawnedCharacter);
 		}
 		Mutex.Unlock();
 	}
 
+	Mutex.Lock();
 	if (Charaters.Num() >= MaxCharacterNum)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 	}
+	Mutex.Unlock();
 }
 
 void ACCSpawner::OnBeginDestroy(ACCPaperNonPlayer* DestroyedCharacter)
@@ -62,10 +64,14 @@ void ACCSpawner::OnBeginDestroy(ACCPaperNonPlayer* DestroyedCharacter)
 		return;
 	}
 
+	Mutex.Lock();
 	Charaters.Remove(DestroyedCharacter);
+
+	UE_LOG(LogTemp, Log, TEXT("Remove"));
 
 	if ((!GetWorld()->GetTimerManager().IsTimerActive(TimerHandle)) && Charaters.Num() < MaxCharacterNum)
 	{
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ACCSpawner::SpawnCharacter, SpawnInterval, true, SpawnInterval);
 	}
+	Mutex.Unlock();
 }

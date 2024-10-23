@@ -8,6 +8,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerCountChanged, int32, PlayerCount);
 
+class UCCPopupWidget;
+
 /**
  * 
  */
@@ -15,6 +17,9 @@ UCLASS()
 class CLAWCLASHMULTIPLAYER_API ACCEntryGameState : public AGameStateBase
 {
 	GENERATED_BODY()
+	
+protected:
+	void BeginPlay() override;
 	
 public:
 	ACCEntryGameState();
@@ -32,5 +37,8 @@ protected:
 	void OnRep_PlayerCount();
 
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UCCPopupWidget> LobbyWidgetClass;
 	
 };

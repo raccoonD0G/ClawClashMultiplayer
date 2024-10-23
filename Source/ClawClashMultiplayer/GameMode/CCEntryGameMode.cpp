@@ -24,8 +24,10 @@ void ACCEntryGameMode::PostLogin(APlayerController* NewPlayer)
 			PlayerState->SetTeam(EPlayerTeam::Red);
 
 			ACCEntryGameState* EntryGameState = GetGameState<ACCEntryGameState>();
-			EntryGameState->AddPlayerCount();
-
+			if (EntryGameState)
+			{
+				EntryGameState->AddPlayerCount();
+			}
 		}
 		else
 		{
@@ -35,7 +37,10 @@ void ACCEntryGameMode::PostLogin(APlayerController* NewPlayer)
 			GetWorld()->GetTimerManager().SetTimer(Handle, this, &ACCEntryGameMode::StartMatch, 5.0f, false, 5.0f);
 
 			ACCEntryGameState* EntryGameState = GetGameState<ACCEntryGameState>();
-			EntryGameState->AddPlayerCount();
+			if (EntryGameState)
+			{
+				EntryGameState->AddPlayerCount();
+			}
 		}
 	}
 }

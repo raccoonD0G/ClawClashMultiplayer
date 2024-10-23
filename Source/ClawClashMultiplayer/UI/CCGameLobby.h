@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ClawClashMultiplayer/UI/CCLevelWidget.h"
+#include "ClawClashMultiplayer/UI/CCPopupWidget.h"
 #include "CCGameLobby.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CLAWCLASHMULTIPLAYER_API UCCGameLobby : public UCCLevelWidget
+class CLAWCLASHMULTIPLAYER_API UCCGameLobby : public UCCPopupWidget
 {
 	GENERATED_BODY()
 	

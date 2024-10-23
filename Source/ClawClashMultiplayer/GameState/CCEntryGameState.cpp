@@ -3,6 +3,17 @@
 
 #include "ClawClashMultiplayer/GameState/CCEntryGameState.h"
 #include "Net/UnrealNetwork.h"
+#include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
+#include "ClawClashMultiplayer/UI/CCPopupWidget.h"
+
+void ACCEntryGameState::BeginPlay()
+{
+	Super::BeginPlay();
+	if (LobbyWidgetClass)
+	{
+		UCCUIManager::GetInstance()->AddPopupWidget(GetWorld(), LobbyWidgetClass);
+	}
+}
 
 ACCEntryGameState::ACCEntryGameState()
 {

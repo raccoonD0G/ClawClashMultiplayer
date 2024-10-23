@@ -492,7 +492,7 @@ void ACCPaperPlayer::Respawn()
 {
 	FTimerHandle TeleportTimerHandle;
 	Client_DisableInput();
-	GetWorld()->GetTimerManager().SetTimer(TeleportTimerHandle, this, &ACCPaperPlayer::BackToRespawnPos, 5.0f, false);
+	GetWorld()->GetTimerManager().SetTimer(TeleportTimerHandle, this, &ACCPaperPlayer::BackToRespawnPos, 0.1f, false);
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 }
 

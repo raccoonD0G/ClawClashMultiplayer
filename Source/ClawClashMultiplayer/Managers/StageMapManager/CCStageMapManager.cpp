@@ -57,6 +57,16 @@ void UCCStageMapManager::SetStageMap(ACCTileMapActor* NewStageMap)
     }
 }
 
+float UCCStageMapManager::MapLoadingPercent()
+{
+    float Percent = 0.0f;
+    if (bIsFieldGenerated) Percent += 0.25f;
+    if (bIsSpriteGenerated) Percent += 0.25;
+    if (bIsColliderGenerated) Percent += 0.25f;
+    if (bIsTriggerGenerated) Percent += 0.25f;
+    return Percent;
+}
+
 void UCCStageMapManager::InitStageMapInfo()
 {
     InitFieldRatioMap();

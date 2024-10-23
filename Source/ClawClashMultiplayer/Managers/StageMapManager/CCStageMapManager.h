@@ -117,6 +117,8 @@ public:
     FORCEINLINE void TurnTrueIsColliderGenerated() { bIsColliderGenerated = true; }
     FORCEINLINE void TurnTrueIsSpriteGenerated() { bIsSpriteGenerated = true; }
 
+    float MapLoadingPercent();
+
     FORCEINLINE bool IsTileMapGenerated() const { return bIsFieldGenerated && bIsTriggerGenerated && bIsColliderGenerated && bIsSpriteGenerated; }
 
     FOnMapGeneratedDelegate OnMapGenerated;

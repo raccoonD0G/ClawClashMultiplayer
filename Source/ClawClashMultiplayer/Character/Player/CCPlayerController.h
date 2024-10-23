@@ -23,6 +23,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* aPawn) override;
+	virtual void PostSeamlessTravel() override;
+
 	virtual void OnRep_Pawn() override;
 
 protected:

@@ -7,24 +7,23 @@
 #include "PaperSprite.h"
 #include "PaperTileMap.h"
 #include "PaperSpriteComponent.h"
-
 #include "ClawClashMultiplayer/Managers/StageMapManager/CCStageMapManager.h"
-
 #include "ClawClashMultiplayer/StageMap/StageMapParts/CCRoom.h"
 #include "ClawClashMultiplayer/StageMap/StageMapParts/CCPlatform.h"
 #include "ClawClashMultiplayer/StageMap/StageMapParts/CCField.h"
 #include "ClawClashMultiplayer/StageMap/CCStageMapDef.h"
-
 #include "ClawClashMultiplayer/StageMap/CCUnionFind.h"
 #include "ClawClashMultiplayer/StageMap/CCFieldCollider.h"
-
 #include "ClawClashMultiplayer/StageMap/CCBoxQuadTreeNode.h"
 #include "ClawClashMultiplayer/Managers/LayerManager/CCLayerManager.h"
-
 #include "ClawClashMultiplayer/Spawner/CCSpawnerSpawner.h"
 #include "Net/UnrealNetwork.h"
 #include "ClawClashMultiplayer/StageMap/CCFieldTrigger.h"
 #include "ClawClashMultiplayer/StageMap/CCTree.h"
+#include "Kismet/GameplayStatics.h"
+#include "ClawClashMultiplayer/CCPlayerSpawner.h"
+#include "ClawClashMultiplayer/Character/Player/CCPaperPlayer.h"
+#include "Components/CapsuleComponent.h"
 
 ACCTileMapActor::ACCTileMapActor()
 {
@@ -33,58 +32,65 @@ ACCTileMapActor::ACCTileMapActor()
 	RootComponent = FieldTileMapComponent;
     FieldTileMapComponent->SetCollisionProfileName(TEXT("NoCollision"));
     bReplicates = true;
+
+    
 }
 
 void ACCTileMapActor::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (UCCStageMapManager::GetStageMap() == nullptr || !UCCStageMapManager::GetStageMap()->IsValidLowLevel())
+    if (HasAuthority())
     {
-        UCCStageMapManager::SetStageMap(this);
+
+    }
+}
+
+void ACCTileMapActor::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    if (!UCCStageMapManager::GetInstance()->GetStageMap())
+    {
+        UCCStageMapManager::GetInstance()->SetStageMap(this);
     }
     else
     {
         Destroy();
-        return;
     }
 
-    if (!HasAuthority())
+    if (HasAuthority())
     {
-        return;
-    }
-
-    if (SpawnerSpawner == nullptr)
-    {
-        return;
-    }
-
-    if (FieldTileMapComponent && FieldTileSet)
-    {
-        FieldTileMapComponent->SetIsReplicated(true);
-        UCCStageMapManager::GetInstance()->InitializeTileSet(FieldTileSet);
-        InitializeTileMap(FieldTileSet, TileMapHeight, TileMapWidth, TileWidth, TileHeight);
-    }
-
-    RootNode = NewObject<UCCBoxQuadTreeNode>();
-    RootNode->Initialize(FVector2D(0, -GetTileMapHeight() * 512), FVector2D(GetTileMapWidth() * 512, 0), 10);
-
-    TArray<UCCRoom*> RoomArr;
-    TArray<UCCPlatform*> PlatformArr;
-    GenerateRooms(RoomArr, TileMapWidth, TileMapHeight, MinRoomHeight, MinRoomWidth);
-    for (UCCRoom* Room : RoomArr)
-    {
-        PlatformArr.Add(Room->GeneratePlatform());
-    }
-    GenerateMST(PlatformArr);
-
-    for (UCCPlatform* Platform : PlatformArr)
-    {
-        for (UCCField* Field : Platform->GetFieldArr())
+        if (FieldTileMapComponent && FieldTileSet)
         {
-            FieldArr.Add(Field);
-            FieldStructArr.Add(FCCFieldStruct(Field->GetStartPos(), Field->GetLength(), Field->GetFieldType()));
+            FieldTileMapComponent->SetIsReplicated(true);
+            UCCStageMapManager::GetInstance()->InitializeTileSet(FieldTileSet);
+            InitializeTileMap(FieldTileSet, TileMapHeight, TileMapWidth, TileWidth, TileHeight);
+        }
 
+        RootNode = NewObject<UCCBoxQuadTreeNode>();
+        RootNode->Initialize(FVector2D(0, -GetTileMapHeight() * 512), FVector2D(GetTileMapWidth() * 512, 0), 10);
+
+        TArray<UCCRoom*> RoomArr;
+        TArray<UCCPlatform*> PlatformArr;
+        GenerateRooms(RoomArr, TileMapWidth, TileMapHeight, MinRoomHeight, MinRoomWidth);
+        for (UCCRoom* Room : RoomArr)
+        {
+            PlatformArr.Add(Room->GeneratePlatform());
+        }
+        GenerateMST(PlatformArr);
+
+        for (UCCPlatform* Platform : PlatformArr)
+        {
+            for (UCCField* Field : Platform->GetFieldArr())
+            {
+                FieldArr.Add(Field);
+                FieldStructArr.Add(FCCFieldStruct(Field->GetStartPos(), Field->GetLength(), Field->GetFieldType()));
+            }
+        }
+
+        for (UCCField* Field : FieldArr)
+        {
             CreatFieldTile(Field);
             PlaceSpriteEachField(Field);
 
@@ -103,26 +109,56 @@ void ACCTileMapActor::BeginPlay()
                 break;
             }
         }
+
+        TSet<int32> TreeFieldIndexs;
+        while (TreeFieldIndexs.Num() < 10)
+        {
+            TreeFieldIndexs.Add(FMath::RandRange(0, FieldArr.Num() - 1));
+        }
+
+        for (int32 Index : TreeFieldIndexs)
+        {
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            float TreeX = FMath::RandRange(GetWorldSpaceStartPos(FieldArr[Index]).X, GetWorldSpaceEndPos(FieldArr[Index]).X);
+            FVector TreePos(TreeX, UCCLayerManager::GetTreeY(), GetWorldSpaceStartPos(FieldArr[Index]).Z + GetTileHeight() / 2.0f);
+            ACCTree* Tree = GetWorld()->SpawnActor<ACCTree>(TreeClass, TreePos, FRotator::ZeroRotator, SpawnParams);
+            Trees.Add(Tree);
+        }
+
+        FieldTileMapComponent->RebuildCollision();
+
+        TArray<AActor*> PlayerSpawners;
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCPlayerSpawner::StaticClass(), PlayerSpawners);
+
+        for (AActor* Spawner : PlayerSpawners)
+        {
+            ACCPlayerSpawner* PlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
+
+            if (PlayerSpawner)
+            {
+                UCCField* Field = FieldArr[FMath::RandRange(0, FieldArr.Num() - 1)];
+                FVector StartPos = (GetWorldSpaceEndPos(Field) + GetWorldSpaceStartPos(Field)) / 2.0f;
+                StartPos.Z += 1000.0f;
+                if (PlayerSpawner->GetPlayerTeam() == EPlayerTeam::Blue)
+                {
+                    BluePlayerStartPos = StartPos;
+                }
+                else if (PlayerSpawner->GetPlayerTeam() == EPlayerTeam::Red)
+                {
+                    RedPlayerStartPos = StartPos;
+                }
+            }
+        }
+
+        OnRep_BluePlayerStartPos();
+        OnRep_RedPlayerStartPos();
+
+        UCCStageMapManager::GetInstance()->TurnTrueIsFieldGenerated();
+        UCCStageMapManager::GetInstance()->TurnTrueIsTriggerGenerated();
+        UCCStageMapManager::GetInstance()->TurnTrueIsColliderGenerated();
+        UCCStageMapManager::GetInstance()->TurnTrueIsSpriteGenerated();
     }
-
-
-    TSet<int32> TreeFieldIndexs;
-    while (TreeFieldIndexs.Num() < 10)
-    {
-        TreeFieldIndexs.Add(FMath::RandRange(0, FieldArr.Num() - 1));
-    }
-
-    for (int32 Index : TreeFieldIndexs)
-    {
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-        FVector TreePos(FMath::RandRange(GetWorldSpaceStartPos(FieldArr[Index]).X, GetWorldSpaceEndPos(FieldArr[Index]).X), 0, GetWorldSpaceStartPos(FieldArr[Index]).Z);
-        ACCTree* Tree = GetWorld()->SpawnActor<ACCTree>(TreeClass, TreePos, FRotator::ZeroRotator, SpawnParams);
-        Trees.Add(Tree);
-    }
-    
-
-    FieldTileMapComponent->RebuildCollision();
 }
 
 void ACCTileMapActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -134,6 +170,8 @@ void ACCTileMapActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
     DOREPLIFETIME(ACCTileMapActor, FieldColliderArr);
     DOREPLIFETIME(ACCTileMapActor, FieldTriggerArr);
     DOREPLIFETIME(ACCTileMapActor, Trees);
+    DOREPLIFETIME(ACCTileMapActor, RedPlayerStartPos);
+    DOREPLIFETIME(ACCTileMapActor, BluePlayerStartPos);
     
 }
 
@@ -158,6 +196,13 @@ void ACCTileMapActor::OnRep_FieldStructArr()
     }
 
     FieldTileMapComponent->RebuildCollision();
+
+    UCCStageMapManager::GetInstance()->TurnTrueIsFieldGenerated();
+
+    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
+    {
+        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
+    }
 }
 
 FVector ACCTileMapActor::GetWorldSpaceStartPos(UCCField* Field) const
@@ -336,7 +381,7 @@ void ACCTileMapActor::CreatePlatformsAlongEdge(TArray<UCCPlatform*>& PlatformArr
     for (float CurrentDistance = Distance / (NumOfPlatform + 1); CurrentDistance < Distance; CurrentDistance += Distance / (NumOfPlatform + 1))
     {
         FVector2D NewPlatformPos = FloatPos1 + Direction * CurrentDistance;
-        int32 NewLength = FMath::RandRange(6, 8);
+        int32 NewLength = FMath::RandRange(4, 6);
         NewPlatformPos.X -= NewLength / 2;
         if (NewPlatformPos.X < 0)
         {
@@ -447,12 +492,18 @@ void ACCTileMapActor::OnRep_FieldColliderArr()
     {
         if (FieldCollider != nullptr)
         {
-            //FieldCollider->RegisterComponent();
+            UCCStageMapManager::GetInstance()->TurnTrueIsColliderGenerated();
             FieldCollider->AttachToComponent(FieldTileMapComponent, FAttachmentTransformRules::KeepRelativeTransform);
             this->AddInstanceComponent(FieldCollider);
         }
     }
+
+    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
+    {
+        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
+    }
 }
+    
 
 void ACCTileMapActor::OnRep_FieldTriggerArr()
 {
@@ -460,10 +511,15 @@ void ACCTileMapActor::OnRep_FieldTriggerArr()
     {
         if (FieldTrigger != nullptr)
         {
-            //FieldTrigger->RegisterComponent();
+            UCCStageMapManager::GetInstance()->TurnTrueIsTriggerGenerated();
             FieldTrigger->AttachToComponent(FieldTileMapComponent, FAttachmentTransformRules::KeepRelativeTransform);
             this->AddInstanceComponent(FieldTrigger);
         }
+    }
+
+    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
+    {
+        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
     }
 }
 
@@ -506,7 +562,6 @@ void ACCTileMapActor::PlaceSpriteEachField(UCCField* Field)
 
 void ACCTileMapActor::PlaceSprites(UCCField* Field, float TileInterval, EFeatureType FeatureType, bool bIsBeforePlayer, bool bAllowOverlap, bool bAddToCollisionTree, int32 MinSpriteNum, int32 MaxSpriteNum)
 {
-    
     const FCCFeatureInfoArrContainer& FeatureInfoArr = *UCCStageMapManager::GetInstance()->FeatureInfoMap.Find(FeatureType);
     int32 OffsetTiles = Field->GetLength() - 1;
 
@@ -657,6 +712,13 @@ void ACCTileMapActor::OnRep_SpriteComponentInfoArr()
         NewSpriteComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
         this->AddInstanceComponent(NewSpriteComponent);
     }
+
+    UCCStageMapManager::GetInstance()->TurnTrueIsSpriteGenerated();
+
+    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
+    {
+        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
+    }
 }
 
 FSpawnableField ACCTileMapActor::ChangeIntoSpawnableField(UCCField* Field, ESpawnableType SpawnableType, int32 MaxCharacterNum)
@@ -670,4 +732,14 @@ FSpawnableField ACCTileMapActor::ChangeIntoSpawnableField(UCCField* Field, ESpaw
 
 void ACCTileMapActor::OnRep_Trees()
 {
+}
+
+void ACCTileMapActor::OnRep_RedPlayerStartPos()
+{
+    RedPlayerSpawner->SetActorLocation(RedPlayerStartPos);
+}
+
+void ACCTileMapActor::OnRep_BluePlayerStartPos()
+{
+    BluePlayerSpawner->SetActorLocation(BluePlayerStartPos);
 }

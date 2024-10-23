@@ -36,6 +36,11 @@ UCCStageMapManager* UCCStageMapManager::GetInstance()
 
 void UCCStageMapManager::Init()
 {
+    bIsFieldGenerated = false;
+    bIsTriggerGenerated = false;
+    bIsColliderGenerated = false;
+    bIsSpriteGenerated = false;
+
     InitStageMapInfo();
 }
 

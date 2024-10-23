@@ -18,4 +18,7 @@ class CLAWCLASHMULTIPLAYER_API ACCPaperCharacter : public APaperCharacter
 
 public:
 	ACCPaperCharacter();
+
+protected:
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCause) override;
 };

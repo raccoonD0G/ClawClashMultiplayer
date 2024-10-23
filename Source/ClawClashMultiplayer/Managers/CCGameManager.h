@@ -20,5 +20,7 @@ protected:
 
 public:
     static UCCGameManager* GetInstance();
+
+	
 };
 

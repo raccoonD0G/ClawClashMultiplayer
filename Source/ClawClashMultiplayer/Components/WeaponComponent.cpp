@@ -5,6 +5,9 @@
 #include "Components/CapsuleComponent.h"
 #include "PaperFlipbookComponent.h"
 #include "PaperFlipbook.h"
+#include "ClawClashMultiplayer/Interfaces/CCAttacker.h"
+#include "Kismet/GameplayStatics.h"
+#include "ClawClashMultiplayer/Character/CCPaperCharacter.h"
 
 // Sets default values for this component's properties
 UWeaponComponent::UWeaponComponent()
@@ -24,6 +27,8 @@ void UWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Attacker = TScriptInterface<ICCAttacker>(GetOwner());
+
 	UpdateTimelineFloatTrack.BindDynamic(this, &UWeaponComponent::UpdateWeaponCenterRotation);
 
 	if (WeaponRotateFloatCurve)
@@ -35,6 +40,8 @@ void UWeaponComponent::BeginPlay()
 
 	OnTimelineEnd.BindDynamic(this, &UWeaponComponent::EndAttack);
 	WeaponCenterTimeline->SetTimelineFinishedFunc(OnTimelineEnd);
+
+	
 
 	SetActive(false, true);
 	SetVisibility(false, true);
@@ -53,6 +60,8 @@ void UWeaponComponent::DoAttack()
 {
 	SetVisibility(true, true);
 	SetActive(true, true);
+
+	SetRelativeScale3D(FVector(Attacker->GetAttackRangeMultiplier(), 1.0f, Attacker->GetAttackRangeMultiplier()));
 
 	WeaponFlipbook->SetPlaybackPositionInFrames(1, true);
 	WeaponFlipbook->Play();
@@ -74,6 +83,12 @@ void UWeaponComponent::EndAttack()
 	WeaponCollider->SetCollisionProfileName(TEXT("NoCollision"));
 }
 
+
+void UWeaponComponent::SetWeaponCollider(UCapsuleComponent* InWeaponCollider)
+{
+	WeaponCollider = InWeaponCollider;
+	WeaponCollider->OnComponentBeginOverlap.AddDynamic(this, &UWeaponComponent::OnOverlapBegin);
+}
 
 float UWeaponComponent::GetWeaponFlipbookLengthInSeconds() const
 {
@@ -98,5 +113,21 @@ void UWeaponComponent::UpdateWeaponCenterRotation(float Output)
 	if (CurrentFrame == WeaponFlipbook->GetFlipbook()->GetNumFrames() - 1)
 	{
 		WeaponFlipbook->Stop();
+	}
+}
+
+void UWeaponComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!OtherActor || OtherActor == GetOwner())
+	{
+		return;
+	}
+
+	float DamageAmount = Attacker->GetNormalAttackPower();
+	DamageAmount *= Attacker->GetAttackPowerMultiplier();
+	ACCPaperCharacter* Character = Cast<ACCPaperCharacter>(OtherActor);
+	if (Character)
+	{
+		UGameplayStatics::ApplyDamage(Character, DamageAmount, nullptr, GetOwner(), nullptr);
 	}
 }

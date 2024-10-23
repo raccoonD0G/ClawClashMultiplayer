@@ -14,4 +14,18 @@ class CLAWCLASHMULTIPLAYER_API UCCGameLobby : public UCCLevelWidget
 {
 	GENERATED_BODY()
 	
+protected:
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> PlayerCountText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> ExplainText;
+
+	UPROPERTY()
+	TObjectPtr<class ACCEntryGameState> EntryGameState;
+
+	virtual void NativeConstruct() override;
+
+	UFUNCTION()
+	void OnPlayerCountChange(int32 PlayerCount);
 };

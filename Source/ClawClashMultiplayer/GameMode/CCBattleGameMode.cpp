@@ -4,6 +4,8 @@
 #include "ClawClashMultiplayer/GameMode/CCBattleGameMode.h"
 #include "ClawClashMultiplayer/Character/Player/CCPlayerController.h"
 #include "ClawClashMultiplayer/PlayerState/CCTeamPlayerState.h"
+#include <Kismet/GameplayStatics.h>
+#include <ClawClashMultiplayer/CCPlayerSpawner.h>
 
 ACCBattleGameMode::ACCBattleGameMode()
 {

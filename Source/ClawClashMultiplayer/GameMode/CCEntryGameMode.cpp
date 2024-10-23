@@ -4,6 +4,7 @@
 #include "ClawClashMultiplayer/GameMode/CCEntryGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "ClawClashMultiplayer/PlayerState/CCTeamPlayerState.h"
+#include "ClawClashMultiplayer/GameState/CCEntryGameState.h"
 
 ACCEntryGameMode::ACCEntryGameMode()
 {
@@ -20,14 +21,21 @@ void ACCEntryGameMode::PostLogin(APlayerController* NewPlayer)
 		{
 			RedPlayerController = NewPlayer;
 			ACCTeamPlayerState* PlayerState = Cast<ACCTeamPlayerState>(RedPlayerController->PlayerState);
-			PlayerState->SetTeam(PlayerTeam::Red);
+			PlayerState->SetTeam(EPlayerTeam::Red);
+
+			ACCEntryGameState* EntryGameState = GetGameState<ACCEntryGameState>();
+			EntryGameState->AddPlayerCount();
+
 		}
 		else
 		{
 			BluePlayerController = NewPlayer;
 			ACCTeamPlayerState* PlayerState = Cast<ACCTeamPlayerState>(BluePlayerController->PlayerState);
-			PlayerState->SetTeam(PlayerTeam::Blue);
+			PlayerState->SetTeam(EPlayerTeam::Blue);
 			GetWorld()->GetTimerManager().SetTimer(Handle, this, &ACCEntryGameMode::StartMatch, 5.0f, false, 5.0f);
+
+			ACCEntryGameState* EntryGameState = GetGameState<ACCEntryGameState>();
+			EntryGameState->AddPlayerCount();
 		}
 	}
 }

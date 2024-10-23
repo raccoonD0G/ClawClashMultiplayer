@@ -8,6 +8,7 @@
 #include "ClawClashMultiplayer/Managers/SpawnManager/CCSpawn.h"
 #include "CCTileMapActor.generated.h"
 
+
 class UPaperTileMap;
 class UCCField;
 class UCCPlatform;
@@ -22,6 +23,7 @@ struct FSpawnableField;
 class ACCSpawnerSpawner;
 class UCCFieldTrigger;
 class ACCTree;
+class ACCPlayerSpawner;
 
 USTRUCT()
 struct FPlatformEdge
@@ -172,6 +174,7 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual void PostInitializeComponents() override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 // Info Section
@@ -192,7 +195,7 @@ protected:
     int32 MinRoomHeight = 6;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StageMap")
-    int32 MinRoomWidth = 11;
+    int32 MinRoomWidth = 16;
 
 public:
     FORCEINLINE int32 GetTileMapWidth() const { return TileMapWidth; }
@@ -211,8 +214,12 @@ protected:
     TObjectPtr<UPaperTileSet> FieldTileSet;
 
 // Create Map Section
+
 public:
     FORCEINLINE const TArray<UCCField*>& GetFieldArr() const { return FieldArr; }
+
+    FVector GetWorldSpaceStartPos(UCCField* Field) const;
+    FVector GetWorldSpaceEndPos(UCCField* Field) const;
 
 protected:
     UPROPERTY()
@@ -223,9 +230,6 @@ protected:
 
     UFUNCTION()
     void OnRep_FieldStructArr();
-
-    FVector GetWorldSpaceStartPos(UCCField* Field) const;
-    FVector GetWorldSpaceEndPos(UCCField* Field) const;
 
     void SplitSpace(TArray<UCCRoom*>& OutRooms, UCCRoom* Space, int32 MinWidth, int32 MinHeight, int32 Depth) const;
     void GenerateRooms(TArray<UCCRoom*>& OutRooms, int32 MapWidth, int32 MapHeight, int32 MinWidth, int32 MinHeight) const;
@@ -301,4 +305,23 @@ protected:
 
     UFUNCTION()
     void OnRep_Trees();
+
+protected:
+    UPROPERTY(ReplicatedUsing = OnRep_RedPlayerStartPos)
+    FVector RedPlayerStartPos;
+
+    UFUNCTION()
+    void OnRep_RedPlayerStartPos();
+
+    UPROPERTY(ReplicatedUsing = OnRep_BluePlayerStartPos)
+    FVector BluePlayerStartPos;
+
+    UFUNCTION()
+    void OnRep_BluePlayerStartPos();
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TObjectPtr<ACCPlayerSpawner> RedPlayerSpawner;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TObjectPtr<ACCPlayerSpawner> BluePlayerSpawner;
 };

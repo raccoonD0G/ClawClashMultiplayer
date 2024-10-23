@@ -5,45 +5,49 @@
 #include "CoreMinimal.h"
 #include "ClawClashMultiplayer/Character/CCPaperCharacter.h"
 #include "InputActionValue.h"
+#include "ClawClashMultiplayer/Interfaces/CCAttacker.h"
+#include "ClawClashMultiplayer/Interfaces/CCRespawnable.h"
 #include "CCPaperPlayer.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 
 UENUM(BlueprintType)
 enum class EPlayerState : uint8
 {
-	Idle UMETA(DisplayName = "Idle"),
-	Jump UMETA(DisplayName = "Jump"),
-	ReadyJump UMETA(DisplayName = "ReadyJump"),
-	KeepReadyJump UMETA(DisplayName = "KeepReadyJump"),
-	Move UMETA(DisplayName = "Move"),
-	Falling UMETA(DisplayName = "Falling"),
-	KeepFalling UMETA(DisplayName = "KeepFalling"),
-	Land UMETA(DisplayName = "Land"),
+	Idle,
+	Jump,
+	ReadyJump,
+	KeepReadyJump,
+	Move,
+	Falling,
+	KeepFalling,
+	Land,
 	Attack
 };
 
 class UHealthComponent;
 class UWeaponComponent;
+class UCCPopupWidget;
 
 /**
  * 
  */
 UCLASS()
-class CLAWCLASHMULTIPLAYER_API ACCPaperPlayer : public ACCPaperCharacter
+class CLAWCLASHMULTIPLAYER_API ACCPaperPlayer : public ACCPaperCharacter, public ICCAttacker, public ICCRespawnable
 {
 	GENERATED_BODY()
 	
 public:
 	ACCPaperPlayer();
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	void SetCurrentState(EPlayerState NewState);
-
 	void SetAnimation();
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	void UpdateIdle();
 	void UpdateMove();
@@ -125,31 +129,31 @@ protected:
 
 //Animation Section
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> IdleAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> ReadyJumpAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> JumpAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> KeepReadyJumpAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> LandAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> MoveAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> FallingAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> KeepFallingAnimation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	TObjectPtr<class UPaperFlipbook> AttackAnimation;
 
 // Damage Section
@@ -161,22 +165,34 @@ protected:
 
 // Upgrade Section
 protected:
-	TArray<TFunctionRef<float()>> JumpPowerMultipliers;
+	TArray<TFunction<float()>> JumpPowerMultipliers;
 
-	TArray<TFunctionRef<float()>> MoveSpeedMultipliers;
+	TArray<TFunction<float()>> MoveSpeedMultipliers;
 
-	TArray<TFunctionRef<float()>> AttackPowerMultipliers;
+	TArray<TFunction<float()>> AttackPowerMultipliers;
 
-	TArray<TFunctionRef<float()>> OccupySpeedMultipliers;
+	TArray<TFunction<float()>> AttackRangeMultipliers;
+
+	TArray<TFunction<float()>> OccupySpeedMultipliers;
 
 public:
-	FORCEINLINE void AddJumpPowerMultipliers(TFunctionRef<float()> Func) { JumpPowerMultipliers.Add(Func); }
-	FORCEINLINE void AddMoveSpeedMultipliers(TFunctionRef<float()> Func) { MoveSpeedMultipliers.Add(Func); }
-	FORCEINLINE void AddAttackPowerMultipliers(TFunctionRef<float()> Func) { AttackPowerMultipliers.Add(Func); }
-	FORCEINLINE void AddOccupySpeedMultipliers(TFunctionRef<float()> Func) { OccupySpeedMultipliers.Add(Func); }
+	FORCEINLINE void AddJumpPowerMultipliers(TFunction<float()> Func) { JumpPowerMultipliers.Add(Func); }
+	FORCEINLINE void AddMoveSpeedMultipliers(TFunction<float()> Func) { MoveSpeedMultipliers.Add(Func); }
+	FORCEINLINE void AddAttackPowerMultipliers(TFunction<float()> Func) { AttackPowerMultipliers.Add(Func); }
+	FORCEINLINE void AddAttackRangeMultipliers(TFunction<float()> Func) { AttackRangeMultipliers.Add(Func); }
+	FORCEINLINE void AddOccupySpeedMultipliers(TFunction<float()> Func) { OccupySpeedMultipliers.Add(Func); }
 
 // Attack Section
+public:
+	FORCEINLINE virtual float GetNormalAttackPower() override { return NormalAttackPower; }
+	FORCEINLINE virtual float GetNormalAttackRange() override { return NormalAttackRange; }
+	virtual float GetAttackPowerMultiplier() override;
+	virtual float GetAttackRangeMultiplier() override;
+
 protected:
+	float NormalAttackPower = 20.0f;
+	float NormalAttackRange = 1.0f;
+
 	UPROPERTY()
 	TObjectPtr<UWeaponComponent> WeaponComponent;
 
@@ -190,4 +206,46 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Attack(const FInputActionValue& Value);
 	void Multicast_Attack_Implementation(const FInputActionValue& Value);
+
+// Death Section
+protected:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TSubclassOf<UCCPopupWidget> DeathWidgetClass;
+	
+	UPROPERTY()
+	TObjectPtr<UCCPopupWidget> DeathWidget;
+
+	FOnDeath OnDeathEvent;
+
+	UFUNCTION()
+	void Respawn();
+
+	void BackToRespawnPos();
+
+	UFUNCTION(Client, Reliable)
+	void Client_ShowDeathWidget();
+	void Client_ShowDeathWidget_Implementation();
+
+	UFUNCTION(Client, Reliable)
+	void Client_CloseDeathWidget();
+	void Client_CloseDeathWidget_Implementation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetGraySprite();
+	void Multicast_SetGraySprite_Implementation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetNormalSprite();
+	void Multicast_SetNormalSprite_Implementation();
+
+	UFUNCTION(Client, Reliable)
+	void Client_DisableInput();
+	void Client_DisableInput_Implementation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Client_EnableInput();
+	void Client_EnableInput_Implementation();
+
+public:
+	virtual void OnDeath() override;
 };

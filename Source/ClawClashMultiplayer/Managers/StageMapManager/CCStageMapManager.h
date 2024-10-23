@@ -4,17 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-
 #include "ClawClashMultiplayer/StageMap/CCStageMapDef.h"
-
 #include "ClawClashMultiplayer/CCUtils.h"
-
 #include "PaperTileLayer.h"
-
 #include "PaperSprite.h"
-
 #include "CCStageMapManager.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMapGeneratedDelegate);
 
 USTRUCT()
 struct FCCFieldInfo
@@ -107,9 +103,23 @@ protected:
 protected:
     static ACCTileMapActor* StageMap;
 
+    bool bIsFieldGenerated;
+    bool bIsTriggerGenerated;
+    bool bIsColliderGenerated;
+    bool bIsSpriteGenerated;
+
 public:
     static ACCTileMapActor* GetStageMap();
     static void SetStageMap(ACCTileMapActor* NewStageMap);
+
+    FORCEINLINE void TurnTrueIsFieldGenerated() { bIsFieldGenerated = true; }
+    FORCEINLINE void TurnTrueIsTriggerGenerated() { bIsTriggerGenerated = true; }
+    FORCEINLINE void TurnTrueIsColliderGenerated() { bIsColliderGenerated = true; }
+    FORCEINLINE void TurnTrueIsSpriteGenerated() { bIsSpriteGenerated = true; }
+
+    FORCEINLINE bool IsTileMapGenerated() const { return bIsFieldGenerated && bIsTriggerGenerated && bIsColliderGenerated && bIsSpriteGenerated; }
+
+    FOnMapGeneratedDelegate OnMapGenerated;
 
 // Info Section
 public:

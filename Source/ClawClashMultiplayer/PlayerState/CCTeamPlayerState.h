@@ -7,7 +7,7 @@
 #include "CCTeamPlayerState.generated.h"
 
 UENUM()
-enum class PlayerTeam : uint8
+enum class EPlayerTeam : uint8
 {
 	Red,
 	Blue
@@ -30,13 +30,13 @@ protected:
 // Team Section
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Team, VisibleAnywhere, BlueprintReadOnly)
-	PlayerTeam Team;
+	EPlayerTeam Team;
 
 	UFUNCTION()
 	void OnRep_Team();
 
 public:
-	FORCEINLINE void SetTeam(PlayerTeam InTeam) { Team = InTeam; }
-	FORCEINLINE PlayerTeam GetTeam() { return Team; }
+	FORCEINLINE void SetTeam(EPlayerTeam InTeam) { Team = InTeam; }
+	FORCEINLINE EPlayerTeam GetTeam() { return Team; }
 
 };

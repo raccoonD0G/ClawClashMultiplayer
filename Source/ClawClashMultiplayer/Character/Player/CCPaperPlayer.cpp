@@ -15,6 +15,13 @@
 #include "Net/UnrealNetwork.h"
 #include "ClawClashMultiplayer/Components/HealthComponent.h"
 #include "ClawClashMultiplayer/Components/WeaponComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "ClawClashMultiplayer/PlayerState/CCTeamPlayerState.h"
+#include "ClawClashMultiplayer/CCPlayerSpawner.h"
+#include "ClawClashMultiplayer/StageMap/CCTileMapActor.h"
+#include "ClawClashMultiplayer/Managers/StageMapManager/CCStageMapManager.h"
+#include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
+#include "ClawClashMultiplayer/UI/CCPopupWidget.h"
 
 
 ACCPaperPlayer::ACCPaperPlayer() : Super()
@@ -68,11 +75,6 @@ ACCPaperPlayer::ACCPaperPlayer() : Super()
 	FollowCamera->ProjectionMode = ECameraProjectionMode::Orthographic;
 	FollowCamera->OrthoWidth = 12000.0;
 
-	if (IdleAnimation)
-	{
-		GetSprite()->SetFlipbook(IdleAnimation);
-	}
-
 	GetSprite()->SetIsReplicated(true);
 
 	FVector NewLocation = GetActorLocation();
@@ -101,24 +103,6 @@ void ACCPaperPlayer::BeginPlay()
 	Super::BeginPlay();
 
 	SetCurrentState(EPlayerState::Idle);
-
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		EnableInput(PlayerController);
-	}
-
-	if (PlayerController && IsLocallyControlled())
-	{
-		PlayerController->SetViewTarget(this);
-
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->ClearAllMappings();
-			Subsystem->AddMappingContext(InputMappingContext, 0);
-		}
-	}
-	
 }
 
 void ACCPaperPlayer::Tick(float DeltaTime)
@@ -176,6 +160,23 @@ void ACCPaperPlayer::PostInitializeComponents()
 	Super::PostInitializeComponents();
 	HealthComponent = GetComponentByClass<UHealthComponent>();
 	WeaponComponent = GetComponentByClass<UWeaponComponent>();
+}
+
+void ACCPaperPlayer::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (HasAuthority())
+	{
+		if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
+		{
+			Respawn();
+		}
+		else
+		{
+			UCCStageMapManager::GetInstance()->OnMapGenerated.AddDynamic(this, &ACCPaperPlayer::Respawn);
+		}
+	}
 }
 
 void ACCPaperPlayer::UpdateIdle()
@@ -390,6 +391,7 @@ void ACCPaperPlayer::Server_LeftRightMove_Implementation(const FVector2D InputVe
 	}
 
 	ServerPlayerYaw = Rotator.Yaw;
+	OnRep_ServerPlayerYaw();
 }
 
 void ACCPaperPlayer::Server_LeftRightMoveCompleted_Implementation(const FVector2D InputVector)
@@ -410,7 +412,12 @@ void ACCPaperPlayer::Server_ReleaseJump_Implementation()
 	if (CurrentState == EPlayerState::ReadyJump || CurrentState == EPlayerState::KeepReadyJump)
 	{
 		SetCurrentState(EPlayerState::Jump);
-		float JumpForce = FMath::Clamp(JumpReadyTime / MaxReadyTime, 0.0f, 1.0f) * MaxJumpForce;
+		float JumpMultiplier = 1.0f;
+		for (TFunction<float()> Func : JumpPowerMultipliers)
+		{
+			JumpMultiplier *= Func();
+		}
+		float JumpForce = FMath::Clamp(JumpReadyTime / MaxReadyTime, 0.0f, 1.0f) * MaxJumpForce * JumpMultiplier;
 		LaunchCharacter(FVector(0, 0, JumpForce), false, true);
 		JumpReadyTime = 0.0f;
 	}
@@ -424,6 +431,26 @@ float ACCPaperPlayer::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 		HealthComponent->GetDamaged(DamageAmount);
 	}
 	return 0.0f;
+}
+
+float ACCPaperPlayer::GetAttackPowerMultiplier()
+{
+	float AttackPowerMultiplier = 1.0f;
+	for (TFunction<float()> Func : AttackPowerMultipliers)
+	{
+		AttackPowerMultiplier *= Func();
+	}
+	return AttackPowerMultiplier;
+}
+
+float ACCPaperPlayer::GetAttackRangeMultiplier()
+{
+	float AttackRangeMultiplier = 1.0f;
+	for (TFunction<float()> Func : AttackRangeMultipliers)
+	{
+		AttackRangeMultiplier *= Func();
+	}
+	return AttackRangeMultiplier;
 }
 
 void ACCPaperPlayer::Attack(const FInputActionValue& Value)
@@ -448,5 +475,112 @@ void ACCPaperPlayer::Multicast_Attack_Implementation(const FInputActionValue& Va
 	if (WeaponComponent)
 	{
 		WeaponComponent->DoAttack();
+	}
+}
+
+void ACCPaperPlayer::OnDeath()
+{
+	if (HasAuthority())
+	{
+		Respawn();
+		Client_ShowDeathWidget();
+		Multicast_SetGraySprite();
+	}
+}
+
+void ACCPaperPlayer::Respawn()
+{
+	FTimerHandle TeleportTimerHandle;
+	Client_DisableInput();
+	GetWorld()->GetTimerManager().SetTimer(TeleportTimerHandle, this, &ACCPaperPlayer::BackToRespawnPos, 5.0f, false);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+}
+
+void ACCPaperPlayer::BackToRespawnPos()
+{
+	if (HasAuthority())
+	{
+		Client_CloseDeathWidget();
+
+		TArray<AActor*> PlayerSpawners;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCPlayerSpawner::StaticClass(), PlayerSpawners);
+		ACCPlayerSpawner* PlayerSpawner = nullptr;
+
+		for (AActor* Spawner : PlayerSpawners)
+		{
+			PlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
+			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(GetPlayerState());
+			if (TeamPlayerState->GetTeam() == PlayerSpawner->GetPlayerTeam())
+			{
+				break;
+			}
+		}
+
+		Multicast_SetNormalSprite();
+
+		if (PlayerSpawner != nullptr)
+		{
+			SetActorLocation(PlayerSpawner->GetActorLocation());
+			Client_EnableInput();
+			GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCBlockedPlayer"));
+		}
+
+		HealthComponent->GetHeal(HealthComponent->GetMaxHp());
+	}
+}
+
+void ACCPaperPlayer::Client_ShowDeathWidget_Implementation()
+{
+	if (IsLocallyControlled())
+	{
+		if (DeathWidgetClass)
+		{
+			DeathWidget = UCCUIManager::GetInstance()->AddPopupWidget(GetWorld(), DeathWidgetClass);
+		}
+	}
+}
+
+void ACCPaperPlayer::Client_CloseDeathWidget_Implementation()
+{
+	if (IsLocallyControlled())
+	{
+		UCCUIManager::GetInstance()->RemoveTopPopupWidget(DeathWidget);
+	}
+}
+
+void ACCPaperPlayer::Multicast_SetGraySprite_Implementation()
+{
+	GetSprite()->SetSpriteColor(FLinearColor(0.1f, 0.1f, 0.1f, 1.0f));
+}
+
+void ACCPaperPlayer::Multicast_SetNormalSprite_Implementation()
+{
+	GetSprite()->SetSpriteColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+}
+
+void ACCPaperPlayer::Client_DisableInput_Implementation()
+{
+	if (IsLocallyControlled())
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(GetController());
+		DisableInput(PlayerController);
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->ClearAllMappings();
+		}
+	}
+}
+
+void ACCPaperPlayer::Client_EnableInput_Implementation()
+{
+	if (IsLocallyControlled())
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(GetController());
+		EnableInput(PlayerController);
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->ClearAllMappings();
+			Subsystem->AddMappingContext(InputMappingContext, 0);
+		}
 	}
 }

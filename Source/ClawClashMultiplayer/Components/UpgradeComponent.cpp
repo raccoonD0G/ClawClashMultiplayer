@@ -24,6 +24,7 @@ UUpgradeComponent::UUpgradeComponent()
 	MoveSpeedMultiplier = 1.0f;
 	JumpPowerMultiplier = 1.0f;
 	AttackPowerMultiplier = 1.0f;
+	AttackRangeMultiplier = 1.0f;
 	ExpMultiplier = 1.0f;
 	OccupySpeedMultiplier = 1.0f;
 
@@ -57,6 +58,11 @@ void UUpgradeComponent::BeginPlay()
 	Player->AddAttackPowerMultipliers([this]() -> float
 		{
 			return AttackPowerMultiplier;
+		});
+
+	Player->AddAttackRangeMultipliers([this]() -> float
+		{
+			return AttackRangeMultiplier;
 		});
 
 	Player->AddOccupySpeedMultipliers([this]() -> float

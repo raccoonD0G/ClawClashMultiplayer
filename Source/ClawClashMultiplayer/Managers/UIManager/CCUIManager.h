@@ -39,4 +39,5 @@ protected:
 public:
 	UCCPopupWidget* AddPopupWidget(UWorld* InWorld, TSubclassOf<UCCPopupWidget> NewPopup);
 	bool RemoveTopPopupWidget(UCCPopupWidget* TopPopup);
+
 };

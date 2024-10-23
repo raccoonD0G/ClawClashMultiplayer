@@ -20,7 +20,7 @@ public:
     static float GetBeforePlayerSpriteY();
     static float GetFieldTileY();
     static float GetNonPlayerY();
+    static float GetTreeY();
     static float GetPlayerY();
-    static float GetAfterPlayerSpriteY()
-    ;
+    static float GetAfterPlayerSpriteY();
 };

@@ -89,13 +89,13 @@ void ACCTree::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(Player->GetController()->PlayerState);
 			if (TeamPlayerState)
 			{
-				PlayerTeam Team = TeamPlayerState->GetTeam();
+				EPlayerTeam Team = TeamPlayerState->GetTeam();
 				switch (Team)
 				{
-				case PlayerTeam::Blue:
+				case EPlayerTeam::Blue:
 					BluePlayer = Player;
 					break;
-				case PlayerTeam::Red:
+				case EPlayerTeam::Red:
 					RedPlayer = Player;
 					break;
 				default:
@@ -116,13 +116,13 @@ void ACCTree::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherAct
 			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(Player->GetController()->PlayerState);
 			if (TeamPlayerState)
 			{
-				PlayerTeam Team = TeamPlayerState->GetTeam();
+				EPlayerTeam Team = TeamPlayerState->GetTeam();
 				switch (Team)
 				{
-				case PlayerTeam::Blue:
+				case EPlayerTeam::Blue:
 					BluePlayer = nullptr;
 					break;
-				case PlayerTeam::Red:
+				case EPlayerTeam::Red:
 					RedPlayer = nullptr;
 					break;
 				default:

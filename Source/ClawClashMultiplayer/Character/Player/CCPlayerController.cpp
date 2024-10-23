@@ -7,6 +7,8 @@
 #include "Blueprint/UserWidget.h"
 #include "ClawClashMultiplayer/UI/CCBattleWidget.h"
 #include "ClawClashMultiplayer/Components/ExpComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "ClawClashMultiplayer/CCPlayerSpawner.h"
 
 ACCPlayerController::ACCPlayerController()
 {
@@ -24,6 +26,11 @@ void ACCPlayerController::BeginPlay()
 void ACCPlayerController::OnPossess(APawn* aPawn)
 {
     Super::OnPossess(aPawn);
+}
+
+void ACCPlayerController::PostSeamlessTravel()
+{
+    Super::PostSeamlessTravel();
 }
 
 void ACCPlayerController::OnRep_Pawn()

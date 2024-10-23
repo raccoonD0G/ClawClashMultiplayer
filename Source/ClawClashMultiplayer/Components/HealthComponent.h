@@ -44,6 +44,7 @@ public:
 
 	void GetHeal(int32 Amount);
 
+	FORCEINLINE int32 GetMaxHp() { return MaxHp; }
+
 	FORCEINLINE float GetHealthRatio() { return (float)CurrentHp / ((MaxHp == 0) ? 1.0f : (float)MaxHp); }
-		
 };

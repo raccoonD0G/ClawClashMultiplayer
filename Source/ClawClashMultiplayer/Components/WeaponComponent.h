@@ -9,6 +9,7 @@
 
 class UPaperFlipbookComponent;
 class UCapsuleComponent;
+class ICCAttacker;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CLAWCLASHMULTIPLAYER_API UWeaponComponent : public USceneComponent
@@ -28,11 +29,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 // Attack Section
-
-protected:
-	float AttackPower;
-
 public:
+	TScriptInterface<ICCAttacker> Attacker;
+
 	void DoAttack();
 
 	UFUNCTION()
@@ -50,7 +49,7 @@ protected:
 	TObjectPtr<UCapsuleComponent> WeaponCollider;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	FORCEINLINE void SetWeaponCollider(UCapsuleComponent* InWeaponCollider) { WeaponCollider = InWeaponCollider; }
+	void SetWeaponCollider(UCapsuleComponent* InWeaponCollider);
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FORCEINLINE void SetWeaponCenter(USceneComponent* InWeaponCenter) { WeaponCenter = InWeaponCenter; }
@@ -74,4 +73,8 @@ protected:
 
 	UFUNCTION()
 	void UpdateWeaponCenterRotation(float Output);
+
+protected:
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

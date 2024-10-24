@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ClawClashMultiplayer/Components/DamageSphereComponent.h"
 #include <ClawClashMultiplayer/Components/HealthBarWidgetComponent.h>
+#include "ClawClashMultiplayer/Components/ExpComponent.h"
 
 ACCPaperRaccoon::ACCPaperRaccoon() : Super()
 {
@@ -107,4 +108,14 @@ void ACCPaperRaccoon::EndMove()
 {
 	Super::EndMove();
 	SetCurrentState(ERaccoonState::Idle);
+}
+
+void ACCPaperRaccoon::OnDeath(AActor* Destroyer)
+{
+	UExpComponent* ExpComponent = Destroyer->GetComponentByClass<UExpComponent>();
+	if (ExpComponent)
+	{
+		ExpComponent->AddExp(300);
+	}
+	Destroy();
 }

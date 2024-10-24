@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ClawClashMultiplayer/Components/DamageSphereComponent.h"
 #include "ClawClashMultiplayer/Components/HealthBarWidgetComponent.h"
+#include <ClawClashMultiplayer/Components/ExpComponent.h>
 
 ACCPaperBulldog::ACCPaperBulldog() : Super()
 {
@@ -110,4 +111,14 @@ void ACCPaperBulldog::EndMove()
 {
 	Super::EndMove();
 	SetCurrentState(EBulldogState::Idle);
+}
+
+void ACCPaperBulldog::OnDeath(AActor* Destroyer)
+{
+	UExpComponent* ExpComponent = Destroyer->GetComponentByClass<UExpComponent>();
+	if (ExpComponent)
+	{
+		ExpComponent->AddExp(500);
+	}
+	Destroy();
 }

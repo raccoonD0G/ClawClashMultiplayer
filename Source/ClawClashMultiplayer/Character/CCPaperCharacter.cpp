@@ -15,7 +15,7 @@ float ACCPaperCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	UHealthComponent* HealthComponent = GetComponentByClass<UHealthComponent>();
 	if (HealthComponent)
 	{
-		HealthComponent->GetDamaged(DamageAmount);
+		HealthComponent->GetDamaged(DamageAmount, DamageCause);
 	}
 	return 0.0f;
 }

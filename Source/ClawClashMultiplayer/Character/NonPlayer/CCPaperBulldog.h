@@ -6,6 +6,7 @@
 #include "ClawClashMultiplayer/Character/NonPlayer/CCPaperNonPlayer.h"
 #include "ClawClashMultiplayer/Interfaces/CCRushable.h"
 #include "ClawClashMultiplayer/Interfaces/CCReadyRushable.h"
+#include "ClawClashMultiplayer/Interfaces/CCDestroyable.h"
 #include "CCPaperBulldog.generated.h"
 
 UENUM(BlueprintType)
@@ -22,7 +23,7 @@ class UDamageSphereComponent;
  * 
  */
 UCLASS()
-class CLAWCLASHMULTIPLAYER_API ACCPaperBulldog : public ACCPaperNonPlayer, public ICCRushable, public ICCReadyRushable
+class CLAWCLASHMULTIPLAYER_API ACCPaperBulldog : public ACCPaperNonPlayer, public ICCRushable, public ICCReadyRushable, public ICCDestroyable
 {
 	GENERATED_BODY()
 
@@ -81,4 +82,8 @@ public:
 public :
 	virtual void StartMove() override;
 	virtual void EndMove() override;
+
+// Death Section
+public:
+	virtual void OnDeath(AActor* Destroyer) override;
 };

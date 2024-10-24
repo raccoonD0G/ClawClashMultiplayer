@@ -4,6 +4,7 @@
 #include "ClawClashMultiplayer/Components/HealthComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "ClawClashMultiplayer/Interfaces/CCRespawnable.h"
+#include <ClawClashMultiplayer/Interfaces/CCDestroyable.h>
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -44,16 +45,25 @@ void UHealthComponent::Init(int32 NewMaxHp)
 	CurrentHp = MaxHp;
 }
 
-void UHealthComponent::GetDamaged(int32 Amount)
+void UHealthComponent::GetDamaged(int32 Amount, AActor* DamageCause)
 {
 	CurrentHp -= Amount;
 	
 	if (CurrentHp <= 0)
 	{
 		TScriptInterface<ICCRespawnable> Respawnable = TScriptInterface<ICCRespawnable>(GetOwner());
+
 		if (Respawnable)
 		{
 			Respawnable->OnDeath();
+		}
+		else
+		{
+			TScriptInterface<ICCDestroyable> Destroyable = TScriptInterface<ICCDestroyable>(GetOwner());
+			if (Destroyable)
+			{
+				Destroyable->OnDeath(DamageCause);
+			}
 		}
 	}
 

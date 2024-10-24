@@ -40,7 +40,7 @@ protected:
 public:
 	FHealthChangedDelegate OnHealthChanged;
 
-	void GetDamaged(int32 Amount);
+	void GetDamaged(int32 Amount, AActor* DamageCause);
 
 	void GetHeal(int32 Amount);
 

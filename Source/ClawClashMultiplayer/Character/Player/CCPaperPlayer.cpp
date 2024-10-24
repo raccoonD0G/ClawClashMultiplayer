@@ -428,7 +428,7 @@ float ACCPaperPlayer::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCause);
 	if (HealthComponent)
 	{
-		HealthComponent->GetDamaged(DamageAmount);
+		HealthComponent->GetDamaged(DamageAmount, DamageCause);
 	}
 	return 0.0f;
 }

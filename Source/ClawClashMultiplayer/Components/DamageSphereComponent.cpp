@@ -7,14 +7,11 @@
 
 UDamageSphereComponent::UDamageSphereComponent()
 {
-    // 기본 데미지 설정
     DamageAmount = 10.0f;
 
-    // 충돌 이벤트 바인딩
     OnComponentBeginOverlap.AddDynamic(this, &UDamageSphereComponent::OnOverlapBegin);
 
-    // 충돌 프로필을 트리거로 설정
-    SetCollisionProfileName(TEXT("Trigger"));
+    SetCollisionProfileName(TEXT("CCAttackSphere"));
 }
 
 void UDamageSphereComponent::BeginPlay()

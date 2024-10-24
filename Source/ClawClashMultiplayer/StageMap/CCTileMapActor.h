@@ -24,6 +24,7 @@ class ACCSpawnerSpawner;
 class UCCFieldTrigger;
 class ACCTree;
 class ACCPlayerSpawner;
+class UBoxComponent;
 
 USTRUCT()
 struct FPlatformEdge
@@ -324,4 +325,12 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TObjectPtr<ACCPlayerSpawner> BluePlayerSpawner;
+
+// MapBound Section
+protected:
+    UPROPERTY()
+    TObjectPtr<UBoxComponent> MapBound;
+
+    UFUNCTION()
+    void OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

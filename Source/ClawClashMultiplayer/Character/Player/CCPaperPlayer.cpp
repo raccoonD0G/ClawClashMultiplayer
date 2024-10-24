@@ -174,6 +174,7 @@ void ACCPaperPlayer::PossessedBy(AController* NewController)
 		}
 		else
 		{
+			UE_LOG(LogTemp, Log, TEXT("Not Yet"));
 			UCCStageMapManager::GetInstance()->OnMapGenerated.AddDynamic(this, &ACCPaperPlayer::Respawn);
 		}
 	}
@@ -482,18 +483,22 @@ void ACCPaperPlayer::OnDeath()
 {
 	if (HasAuthority())
 	{
-		Respawn();
+		FTimerHandle RespawnTimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ACCPaperPlayer::Respawn, 5.0f, false);
+		Client_DisableInput();
 		Client_ShowDeathWidget();
 		Multicast_SetGraySprite();
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCInvinciblePlayer"));
 	}
 }
 
 void ACCPaperPlayer::Respawn()
 {
-	FTimerHandle TeleportTimerHandle;
-	Client_DisableInput();
-	GetWorld()->GetTimerManager().SetTimer(TeleportTimerHandle, this, &ACCPaperPlayer::BackToRespawnPos, 0.1f, false);
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+	if (HasAuthority())
+	{
+		FTimerHandle TeleportTimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TeleportTimerHandle, this, &ACCPaperPlayer::BackToRespawnPos, 0.1f, false);
+	}
 }
 
 void ACCPaperPlayer::BackToRespawnPos()

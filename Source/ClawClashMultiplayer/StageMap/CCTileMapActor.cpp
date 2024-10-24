@@ -24,6 +24,9 @@
 #include "ClawClashMultiplayer/CCPlayerSpawner.h"
 #include "ClawClashMultiplayer/Character/Player/CCPaperPlayer.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
+#include <ClawClashMultiplayer/Interfaces/CCDestroyable.h>
+#include "ClawClashMultiplayer/Components/DamageSphereComponent.h"
 
 ACCTileMapActor::ACCTileMapActor()
 {
@@ -42,7 +45,78 @@ void ACCTileMapActor::BeginPlay()
 
     if (HasAuthority())
     {
+        for (UCCField* Field : FieldArr)
+        {
+            CreatFieldTile(Field);
+            PlaceSpriteEachField(Field);
 
+            switch (Field->GetFieldType())
+            {
+            case EFieldType::DogHouseField:
+                SpawnerSpawner->AddSpawnableField(ChangeIntoSpawnableField(Field, ESpawnableType::Dog, 1));
+                break;
+            case EFieldType::RaccoonHouseField:
+                SpawnerSpawner->AddSpawnableField(ChangeIntoSpawnableField(Field, ESpawnableType::Raccoon, 1));
+                break;
+            case EFieldType::CaveField:
+                SpawnerSpawner->AddSpawnableField(ChangeIntoSpawnableField(Field, ESpawnableType::Rat, 5));
+                break;
+            default:
+                break;
+            }
+        }
+
+        TSet<int32> TreeFieldIndexs;
+        while (TreeFieldIndexs.Num() < 10)
+        {
+            TreeFieldIndexs.Add(FMath::RandRange(0, FieldArr.Num() - 1));
+        }
+
+        for (int32 Index : TreeFieldIndexs)
+        {
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            float TreeX = FMath::RandRange(GetWorldSpaceStartPos(FieldArr[Index]).X, GetWorldSpaceEndPos(FieldArr[Index]).X);
+            FVector TreePos(TreeX, UCCLayerManager::GetTreeY(), GetWorldSpaceStartPos(FieldArr[Index]).Z + GetTileHeight() / 2.0f);
+            ACCTree* Tree = GetWorld()->SpawnActor<ACCTree>(TreeClass, TreePos, FRotator::ZeroRotator, SpawnParams);
+            Trees.Add(Tree);
+        }
+
+        TArray<AActor*> PlayerSpawners;
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCPlayerSpawner::StaticClass(), PlayerSpawners);
+
+        for (AActor* Spawner : PlayerSpawners)
+        {
+            ACCPlayerSpawner* PlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
+
+            if (PlayerSpawner)
+            {
+                UCCField* Field = FieldArr[FMath::RandRange(0, FieldArr.Num() - 1)];
+                FVector StartPos = (GetWorldSpaceEndPos(Field) + GetWorldSpaceStartPos(Field)) / 2.0f;
+                StartPos.Z += 1000.0f;
+                if (PlayerSpawner->GetPlayerTeam() == EPlayerTeam::Blue)
+                {
+                    BluePlayerStartPos = StartPos;
+                }
+                else if (PlayerSpawner->GetPlayerTeam() == EPlayerTeam::Red)
+                {
+                    RedPlayerStartPos = StartPos;
+                }
+            }
+        }
+
+        OnRep_BluePlayerStartPos();
+        OnRep_RedPlayerStartPos();
+
+        UCCStageMapManager::GetInstance()->TurnTrueIsFieldGenerated();
+        UCCStageMapManager::GetInstance()->TurnTrueIsTriggerGenerated();
+        UCCStageMapManager::GetInstance()->TurnTrueIsColliderGenerated();
+        UCCStageMapManager::GetInstance()->TurnTrueIsSpriteGenerated();
+
+        if (MapBound)
+        {
+            MapBound->OnComponentEndOverlap.AddDynamic(this, &ACCTileMapActor::OnEndOverlap);
+        }
     }
 }
 
@@ -89,75 +163,14 @@ void ACCTileMapActor::PostInitializeComponents()
             }
         }
 
-        for (UCCField* Field : FieldArr)
-        {
-            CreatFieldTile(Field);
-            PlaceSpriteEachField(Field);
-
-            switch (Field->GetFieldType())
-            {
-            case EFieldType::DogHouseField:
-                SpawnerSpawner->AddSpawnableField(ChangeIntoSpawnableField(Field, ESpawnableType::Dog, 1));
-                break;
-            case EFieldType::RaccoonHouseField:
-                SpawnerSpawner->AddSpawnableField(ChangeIntoSpawnableField(Field, ESpawnableType::Raccoon, 1));
-                break;
-            case EFieldType::CaveField:
-                SpawnerSpawner->AddSpawnableField(ChangeIntoSpawnableField(Field, ESpawnableType::Rat, 5));
-                break;
-            default:
-                break;
-            }
-        }
-
-        TSet<int32> TreeFieldIndexs;
-        while (TreeFieldIndexs.Num() < 10)
-        {
-            TreeFieldIndexs.Add(FMath::RandRange(0, FieldArr.Num() - 1));
-        }
-
-        for (int32 Index : TreeFieldIndexs)
-        {
-            FActorSpawnParameters SpawnParams;
-            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-            float TreeX = FMath::RandRange(GetWorldSpaceStartPos(FieldArr[Index]).X, GetWorldSpaceEndPos(FieldArr[Index]).X);
-            FVector TreePos(TreeX, UCCLayerManager::GetTreeY(), GetWorldSpaceStartPos(FieldArr[Index]).Z + GetTileHeight() / 2.0f);
-            ACCTree* Tree = GetWorld()->SpawnActor<ACCTree>(TreeClass, TreePos, FRotator::ZeroRotator, SpawnParams);
-            Trees.Add(Tree);
-        }
-
         FieldTileMapComponent->RebuildCollision();
 
-        TArray<AActor*> PlayerSpawners;
-        UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCPlayerSpawner::StaticClass(), PlayerSpawners);
-
-        for (AActor* Spawner : PlayerSpawners)
+        MapBound = GetComponentByClass<UBoxComponent>();
+        if (MapBound)
         {
-            ACCPlayerSpawner* PlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
-
-            if (PlayerSpawner)
-            {
-                UCCField* Field = FieldArr[FMath::RandRange(0, FieldArr.Num() - 1)];
-                FVector StartPos = (GetWorldSpaceEndPos(Field) + GetWorldSpaceStartPos(Field)) / 2.0f;
-                StartPos.Z += 1000.0f;
-                if (PlayerSpawner->GetPlayerTeam() == EPlayerTeam::Blue)
-                {
-                    BluePlayerStartPos = StartPos;
-                }
-                else if (PlayerSpawner->GetPlayerTeam() == EPlayerTeam::Red)
-                {
-                    RedPlayerStartPos = StartPos;
-                }
-            }
+            MapBound->SetRelativeLocation(FVector(TileMapWidth * TileWidth / 2.0f, 0.0f, -TileMapHeight * TileHeight / 2.0f));
+            MapBound->SetBoxExtent(FVector(TileMapWidth * TileWidth / 1.8f, 100.0f, TileMapHeight * TileHeight / 1.8f));
         }
-
-        OnRep_BluePlayerStartPos();
-        OnRep_RedPlayerStartPos();
-
-        UCCStageMapManager::GetInstance()->TurnTrueIsFieldGenerated();
-        UCCStageMapManager::GetInstance()->TurnTrueIsTriggerGenerated();
-        UCCStageMapManager::GetInstance()->TurnTrueIsColliderGenerated();
-        UCCStageMapManager::GetInstance()->TurnTrueIsSpriteGenerated();
     }
 }
 
@@ -742,4 +755,36 @@ void ACCTileMapActor::OnRep_RedPlayerStartPos()
 void ACCTileMapActor::OnRep_BluePlayerStartPos()
 {
     BluePlayerSpawner->SetActorLocation(BluePlayerStartPos);
+}
+
+void ACCTileMapActor::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if (!OtherComp || !OtherComp->IsValidLowLevel())
+    {
+        return;
+    }
+
+    if (OtherComp->IsA(UDamageSphereComponent::StaticClass()))
+    {
+        return;
+    }
+
+    TScriptInterface<ICCRespawnable> Respawnable = TScriptInterface<ICCRespawnable>(OtherActor);
+
+    if (Respawnable)
+    {
+        Respawnable->OnDeath();
+    }
+    else
+    {
+        TScriptInterface<ICCDestroyable> Destroyable = TScriptInterface<ICCDestroyable>(OtherActor);
+        if (Destroyable)
+        {
+            Destroyable->OnDeath(this);
+        }
+        else
+        {
+            OtherActor->Destroy();
+        }
+    }
 }

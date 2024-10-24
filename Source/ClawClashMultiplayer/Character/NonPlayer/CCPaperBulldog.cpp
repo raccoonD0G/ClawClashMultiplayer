@@ -69,7 +69,7 @@ float ACCPaperBulldog::GetReadyRushTime()
 void ACCPaperBulldog::StartRush()
 {
 	SetCurrentState(EBulldogState::Rush);
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Trigger"));
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCAttackSphere"));
 	GetCharacterMovement()->MaxWalkSpeed = RushMoveSpeed;
 	DamageSphereComponent = NewObject<UDamageSphereComponent>(this);
 

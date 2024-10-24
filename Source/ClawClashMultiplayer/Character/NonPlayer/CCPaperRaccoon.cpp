@@ -55,7 +55,7 @@ void ACCPaperRaccoon::SetCurrentState(ERaccoonState NewState)
 void ACCPaperRaccoon::StartJump()
 {
 	SetCurrentState(ERaccoonState::ReadyAttack);
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Trigger"));
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCAttackSphere"));
 }
 
 float ACCPaperRaccoon::GetJumpTime()

@@ -49,8 +49,7 @@ void ACCEntryGameMode::StartMatch()
 {
 	if (HasAuthority())
 	{
-		FString LevelName = "/Game/Maps/BattleLevel";
-
+		FString LevelName = TEXT("/Game/Maps/BattleLevel");
 		GetWorld()->ServerTravel(LevelName, true);
 	}
 }

@@ -21,11 +21,29 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> ExplainText;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> RedPlayerReadyText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> BluePlayerReadyText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> TeamText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UButton> ReadyButton;
+
 	UPROPERTY()
-	TObjectPtr<class ACCEntryGameState> EntryGameState;
+	TObjectPtr<class ACCLobbyGameState> EntryGameState;
 
 	virtual void NativeConstruct() override;
 
 	UFUNCTION()
+	void SetReady();
+
+	UFUNCTION()
 	void OnPlayerCountChange(int32 PlayerCount);
+
+	UFUNCTION()
+	void OnReadyChange(bool bIsRedPlayerReady, bool bIsBluePlayerReady);
 };

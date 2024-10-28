@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ClawClashMultiplayer/CCPlayerSpawner.h"
 #include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
+#include <ClawClashMultiplayer/GameMode/CCLobbyGameMode.h>
 
 ACCPlayerController::ACCPlayerController()
 {
@@ -20,6 +21,8 @@ void ACCPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	bShowMouseCursor = true;
+
 	FInputModeGameAndUI InputMode;
 	SetInputMode(InputMode);
 }
@@ -27,4 +30,18 @@ void ACCPlayerController::BeginPlay()
 void ACCPlayerController::OnRep_Pawn()
 {
     Super::OnRep_Pawn();
+}
+
+void ACCPlayerController::Server_OnReadyButtonClicked_Implementation()
+{
+	if (GetPlayerState<ACCTeamPlayerState>()->GetTeam() == EPlayerTeam::Blue)
+	{
+		ACCLobbyGameMode* GameMode = GetWorld()->GetAuthGameMode<ACCLobbyGameMode>();
+		GameMode->SetBluePlayerReady();
+	}
+	else
+	{
+		ACCLobbyGameMode* GameMode = GetWorld()->GetAuthGameMode<ACCLobbyGameMode>();
+		GameMode->SetRedPlayerReady();
+	}
 }

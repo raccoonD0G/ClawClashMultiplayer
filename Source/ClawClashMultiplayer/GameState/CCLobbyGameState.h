@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "CCEntryGameState.generated.h"
+#include "CCLobbyGameState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerCountChanged, int32, PlayerCount);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReadyChanged, bool, bIsRedPlayerReady, bool, bIsBluePlayerReady);
 
 class UCCPopupWidget;
 
@@ -14,7 +16,7 @@ class UCCPopupWidget;
  * 
  */
 UCLASS()
-class CLAWCLASHMULTIPLAYER_API ACCEntryGameState : public AGameStateBase
+class CLAWCLASHMULTIPLAYER_API ACCLobbyGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 	
@@ -22,10 +24,13 @@ protected:
 	void BeginPlay() override;
 	
 public:
-	ACCEntryGameState();
+	ACCLobbyGameState();
 
 	FORCEINLINE int32 GetPlayerCount() { return PlayerCount; }
 	FORCEINLINE void AddPlayerCount() { PlayerCount++; }
+
+	void SetRedPlayerReady(bool InbIsRedPlayerReady);
+	void SetBluePlayerReady(bool InbIsBluePlayerReady);
 
 	FOnPlayerCountChanged OnPlayerCountChangedEvent;
 
@@ -40,5 +45,20 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UCCPopupWidget> LobbyWidgetClass;
+
+	UPROPERTY(ReplicatedUsing = OnRep_bIsBluePlayerReady)
+	bool bIsBluePlayerReady;
+
+	UFUNCTION()
+	void OnRep_bIsBluePlayerReady();
+
+	UPROPERTY(ReplicatedUsing = OnRep_bIsRedPlayerReady)
+	bool bIsRedPlayerReady;
+
+	UFUNCTION()
+	void OnRep_bIsRedPlayerReady();
+
+public:
+	FOnReadyChanged OnReadyChangedEvent;
 	
 };

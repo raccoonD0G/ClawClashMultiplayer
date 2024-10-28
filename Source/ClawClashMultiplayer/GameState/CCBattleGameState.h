@@ -18,16 +18,21 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
+// Loading Section
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<class UCCPopupWidget> LoadingWidgetClass;
 
 	UPROPERTY()
 	TObjectPtr<class UCCLoadingMapWidget> LoadingMapWidget;
 
+// Battle Widget Section
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<class UCCLevelWidget> BattleWidgetClass;
 
 	UPROPERTY()
 	TObjectPtr<class UCCBattleWidget> BattleWidget;
+
+
 };

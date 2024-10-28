@@ -4,33 +4,46 @@
 
 #include "CoreMinimal.h"
 #include "ClawClashMultiplayer/GameMode/CCGameModeBase.h"
-#include "CCEntryGameMode.generated.h"
+#include "CCLobbyGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CLAWCLASHMULTIPLAYER_API ACCEntryGameMode : public ACCGameModeBase
+class CLAWCLASHMULTIPLAYER_API ACCLobbyGameMode : public ACCGameModeBase
 {
 	GENERATED_BODY()
 	
 public:
-	ACCEntryGameMode();
+	ACCLobbyGameMode();
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 // Player Section
+public:
+	void SetRedPlayerReady();
+	void SetBluePlayerReady();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<APlayerController> RedPlayerController;
 
+	bool bIsRedPlayerReady;
+
 	UPROPERTY()
 	TObjectPtr<APlayerController> BluePlayerController;
 
+	bool bIsBluePlayerReady;
+
 protected:
 	UFUNCTION()
+	void StartMatchInSec(float Sec);
+
+	UFUNCTION()
 	void StartMatch();
+
+	void HandleSeamlessTravelPlayer(AController*& C);
 
 	FTimerHandle Handle;
 	

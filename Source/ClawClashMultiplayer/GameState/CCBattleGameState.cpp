@@ -10,6 +10,7 @@
 #include "ClawClashMultiplayer/UI/CCLoadingMapWidget.h"
 #include "ClawClashMultiplayer/Components/ExpComponent.h"
 #include <ClawClashMultiplayer/CCTimer.h>
+#include <ClawClashMultiplayer/GameMode/CCBattleGameMode.h>
 
 void ACCBattleGameState::BeginPlay()
 {
@@ -22,6 +23,9 @@ void ACCBattleGameState::BeginPlay()
 
 		ACCTimer* Timer = GetWorld()->SpawnActor<ACCTimer>(ACCTimer::StaticClass(), Location, Rotation);
 		Timer->Init(BattleWidget);
+
+		ACCBattleGameMode* GameMode = GetWorld()->GetAuthGameMode<ACCBattleGameMode>();
+		Timer->OnTimerEndEvent.AddDynamic(GameMode, &ACCBattleGameMode::EndMatch);
 	}
 }
 

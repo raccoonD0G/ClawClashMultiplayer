@@ -12,7 +12,7 @@ ACCTimer::ACCTimer()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
     bReplicates = true;
-    TotalGameTime = 180;
+    TotalGameTime = 10;
     bAlwaysRelevant = true;
 }
 
@@ -63,11 +63,6 @@ void ACCTimer::UpdateGameTimer()
     if (RemainingGameTime <= 0)
     {
         GetWorld()->GetTimerManager().ClearTimer(GameTimerHandle);
-
-        // GameResultCode Here
+        OnTimerEndEvent.Broadcast();
     }
-}
-
-void ACCTimer::EndGame()
-{
 }

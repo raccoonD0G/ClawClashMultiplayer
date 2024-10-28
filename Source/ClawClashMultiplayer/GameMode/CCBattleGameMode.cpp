@@ -24,3 +24,8 @@ void ACCBattleGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	ACCTeamPlayerState* NewPlayerState = Cast<ACCTeamPlayerState>(C->PlayerState);
 	NewPlayerState->SetTeam(OldPlayerState->GetTeam());
 }
+
+void ACCBattleGameMode::EndMatch()
+{
+	;
+}

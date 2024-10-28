@@ -26,4 +26,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnRep_Pawn() override;
+
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_OnReadyButtonClicked();
+	void Server_OnReadyButtonClicked_Implementation();
 };

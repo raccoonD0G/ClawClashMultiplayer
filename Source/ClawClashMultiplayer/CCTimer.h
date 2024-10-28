@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "CCTimer.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimerEnd);
+
 UCLASS()
 class CLAWCLASHMULTIPLAYER_API ACCTimer : public AActor
 {
@@ -40,4 +42,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UCCBattleWidget> BattleWidget;
+
+public:
+	FOnTimerEnd OnTimerEndEvent;
 };

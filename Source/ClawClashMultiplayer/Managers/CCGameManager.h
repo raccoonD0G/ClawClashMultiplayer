@@ -20,6 +20,7 @@ protected:
 
 public:
     static UCCGameManager* GetInstance();
+	static void DestroyInstance();
 
 	
 };

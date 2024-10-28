@@ -20,4 +20,5 @@ void UCCLoadingMapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 void UCCLoadingMapWidget::OnLoadingEnd()
 {
 	UCCUIManager::GetInstance()->RemoveTopPopupWidget(this);
+	OnLoadingEndEvent.Broadcast();
 }

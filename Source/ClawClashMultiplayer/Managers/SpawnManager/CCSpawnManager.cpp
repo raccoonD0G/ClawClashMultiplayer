@@ -19,9 +19,19 @@ UCCSpawnManager* UCCSpawnManager::GetInstance()
 	if (Instance == nullptr || !Instance->IsValidLowLevel())
 	{
 		Instance = NewObject<UCCSpawnManager>();
+		Instance->AddToRoot();
 		Instance->Init();
 	}
 	return Instance;
+}
+
+void UCCSpawnManager::DestroyInstance()
+{
+	if (Instance)
+	{
+		Instance->RemoveFromRoot();
+		Instance = nullptr;
+	}
 }
 
 void UCCSpawnManager::Init()

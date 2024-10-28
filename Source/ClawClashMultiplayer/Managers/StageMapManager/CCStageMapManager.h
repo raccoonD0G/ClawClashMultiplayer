@@ -91,6 +91,7 @@ class CLAWCLASHMULTIPLAYER_API UCCStageMapManager : public UObject
 public:
     UCCStageMapManager();
     static UCCStageMapManager* GetInstance();
+    static void DestroyInstance();
     void Init();
 
 protected:

@@ -15,8 +15,19 @@ class CLAWCLASHMULTIPLAYER_API ACCBattleGameState : public AGameStateBase
 	GENERATED_BODY()
 
 protected:
-	void BeginPlay() override;
+	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class UCCPopupWidget> LoadingWidget;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<class UCCPopupWidget> LoadingWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<class UCCLoadingMapWidget> LoadingMapWidget;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<class UCCLevelWidget> BattleWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<class UCCBattleWidget> BattleWidget;
 };

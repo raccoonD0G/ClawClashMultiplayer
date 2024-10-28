@@ -22,7 +22,8 @@ enum class EPlayerState : uint8
 	Falling,
 	KeepFalling,
 	Land,
-	Attack
+	Attack,
+	Died,
 };
 
 class UHealthComponent;
@@ -48,6 +49,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
 	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_Controller() override;
 
 	void UpdateIdle();
 	void UpdateMove();
@@ -248,4 +250,10 @@ protected:
 
 public:
 	virtual void OnDeath() override;
+
+// Exp Section
+protected:
+	bool bIsCompReady;
+	bool bIsControllerReady;
+	void AttatchExpCompToBattleWidget();
 };

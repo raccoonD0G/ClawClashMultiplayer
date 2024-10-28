@@ -9,6 +9,9 @@
 class UUserWidget;
 class UCCBattleWidget;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRepPawn);
+
+
 /**
  * 
  */
@@ -22,15 +25,5 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void OnPossess(APawn* aPawn) override;
-	virtual void PostSeamlessTravel() override;
-
 	virtual void OnRep_Pawn() override;
-
-protected:
-	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<UUserWidget> BattleWidgetClass;
-
-	UPROPERTY()
-	TObjectPtr<UCCBattleWidget> BattleWidget;
 };

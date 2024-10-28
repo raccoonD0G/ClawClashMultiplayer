@@ -6,6 +6,8 @@
 #include "ClawClashMultiplayer/UI/CCPopupWidget.h"
 #include "CCLoadingMapWidget.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLoadingEnd);
+
 /**
  * 
  */
@@ -23,5 +25,8 @@ protected:
 
 	UFUNCTION()
 	void OnLoadingEnd();
+
+public:
+	FOnLoadingEnd OnLoadingEndEvent;
 	
 };

@@ -30,6 +30,15 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> LevelText;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> BlueTreeCountText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> RedTreeCountText;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> TimeText;
+
 	UPROPERTY()
 	TObjectPtr<UExpComponent> ExpComp;
 
@@ -40,4 +49,12 @@ protected:
 
 	UFUNCTION()
 	void OnExpChange(int32 NewExp);
+
+	UFUNCTION()
+	void OnCountChange(int32 RedCount, int32 BlueCount, int32 NeutralCount);
+
+// Timer Section
+public:
+	UFUNCTION()
+	void SetTimeText(int32 NewRemainingGameTime);
 };

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "CCTree.generated.h"
 
+UENUM()
 enum class TreeState
 {
 	Neutral,
@@ -15,6 +16,7 @@ enum class TreeState
 
 class UBoxComponent;
 class ACCPaperPlayer;
+class UPaperSpriteComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPercentChanged, float, Percent);
 
@@ -57,10 +59,20 @@ protected:
 public:
 	FOnPercentChanged OnPercentChanged;
 
+// Sprite Section
+protected:
+	UPROPERTY()
+	TObjectPtr<UPaperSpriteComponent> PaperSpriteComponent;
+
 // State Section
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentState);
 	TreeState CurrentState;
 
+	UFUNCTION()
+	void OnRep_CurrentState();
+
+	void SetStateByRedOccupation();
 public:
 	void SetCurrentState(TreeState InState);
 
@@ -68,7 +80,7 @@ public:
 protected:
 	float MaxOccupation;
 
-	float OccupySpeend;
+	float OccupySpeed;
 
 	UPROPERTY(ReplicatedUsing = OnRep_RedOccupation)
 	float RedOccupation;

@@ -6,6 +6,8 @@
 #include "Net/UnrealNetwork.h"
 #include "ClawClashMultiplayer/PlayerState/CCTeamPlayerState.h"
 #include "ClawClashMultiplayer/Character/Player/CCPaperPlayer.h"
+#include "PaperSpriteComponent.h"
+#include "ClawClashMultiplayer/Managers/TreeManager/CCTreeManager.h"
 
 // Sets default values
 ACCTree::ACCTree()
@@ -14,7 +16,7 @@ ACCTree::ACCTree()
 	PrimaryActorTick.bCanEverTick = true;
 	MaxOccupation = 100;
 	RedOccupation = 50;
-	OccupySpeend = 10.0f;
+	OccupySpeed = 10.0f;
 	bReplicates = true;
 }
 
@@ -22,6 +24,7 @@ void ACCTree::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCTree, RedOccupation);
+	DOREPLIFETIME(ACCTree, CurrentState);
 }
 
 // Called when the game starts or when spawned
@@ -45,6 +48,7 @@ void ACCTree::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	BoxComponent = GetComponentByClass<UBoxComponent>();
+	PaperSpriteComponent = GetComponentByClass<UPaperSpriteComponent>();
 }
 
 // Called every frame
@@ -56,24 +60,13 @@ void ACCTree::Tick(float DeltaTime)
 	{
 		if (BluePlayer && !RedPlayer)
 		{
-			SetRedOccupation(RedOccupation - DeltaTime * OccupySpeend);
+			SetRedOccupation(RedOccupation - DeltaTime * OccupySpeed);
+			SetStateByRedOccupation();
 		}
 		else if (RedPlayer && !BluePlayer)
 		{
-			SetRedOccupation(RedOccupation + DeltaTime * OccupySpeend);
-		}
-
-		if (RedOccupation < 0.01f)
-		{
-			SetCurrentState(TreeState::BlueOccupied);
-		}
-		else if (RedOccupation > MaxOccupation - 0.01f)
-		{
-			SetCurrentState(TreeState::RedOccupied);
-		}
-		else
-		{
-			SetCurrentState(TreeState::Neutral);
+			SetRedOccupation(RedOccupation + DeltaTime * OccupySpeed);
+			SetStateByRedOccupation();
 		}
 	}
 	
@@ -133,15 +126,55 @@ void ACCTree::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherAct
 	}
 }
 
+void ACCTree::OnRep_CurrentState()
+{
+	switch (CurrentState)
+	{
+	case TreeState::Neutral:
+		UCCTreeManager::GetInstance()->AddNeutralTree(this);
+		PaperSpriteComponent->SetSpriteColor(FLinearColor::White);
+		break;
+	case TreeState::RedOccupied:
+		UCCTreeManager::GetInstance()->AddRedTree(this);
+		PaperSpriteComponent->SetSpriteColor(FLinearColor::Red);
+		break;
+	case TreeState::BlueOccupied:
+		UCCTreeManager::GetInstance()->AddBlueTree(this);
+		PaperSpriteComponent->SetSpriteColor(FLinearColor::Blue);
+		break;
+	default:
+		break;
+	}
+}
+
+void ACCTree::SetStateByRedOccupation()
+{
+	if (RedOccupation < 0.01f)
+	{
+		SetCurrentState(TreeState::BlueOccupied);
+	}
+	else if (RedOccupation > MaxOccupation - 0.01f)
+	{
+		SetCurrentState(TreeState::RedOccupied);
+	}
+	else
+	{
+		SetCurrentState(TreeState::Neutral);
+	}
+}
+
 void ACCTree::SetCurrentState(TreeState InState)
 {
 	switch (InState)
 	{
 	case TreeState::Neutral:
+		UCCTreeManager::GetInstance()->AddNeutralTree(this);
 		break;
 	case TreeState::RedOccupied:
+		UCCTreeManager::GetInstance()->AddRedTree(this);
 		break;
 	case TreeState::BlueOccupied:
+		UCCTreeManager::GetInstance()->AddBlueTree(this);
 		break;
 	default:
 		break;

@@ -15,8 +15,18 @@ UCCGameManager* UCCGameManager::GetInstance()
     if (Instance == nullptr || !Instance->IsValidLowLevel())
     {
         Instance = NewObject<UCCGameManager>();
+        Instance->AddToRoot();
     }
     return Instance;
+}
+
+void UCCGameManager::DestroyInstance()
+{
+    if (Instance)
+    {
+        Instance->RemoveFromRoot();
+        Instance = nullptr;
+    }
 }
 
 

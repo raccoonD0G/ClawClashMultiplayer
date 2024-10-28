@@ -18,7 +18,16 @@ UCCUIManager* UCCUIManager::GetInstance()
 	return Instance;
 }
 
-void UCCUIManager::OpenLevelWidget(UWorld* InWorld, TSubclassOf<UCCPopupWidget> NewLevelWidget)
+void UCCUIManager::DestroyInstance()
+{
+	if (Instance)
+	{
+		Instance->RemoveFromRoot();
+		Instance = nullptr;
+	}
+}
+
+UCCLevelWidget* UCCUIManager::OpenLevelWidget(UWorld* InWorld, TSubclassOf<UCCLevelWidget> NewLevelWidget)
 {
 	if (LevelWidget != nullptr && LevelWidget->IsValidLowLevel())
 	{
@@ -28,6 +37,8 @@ void UCCUIManager::OpenLevelWidget(UWorld* InWorld, TSubclassOf<UCCPopupWidget> 
 
 	LevelWidget = CreateWidget<UCCLevelWidget>(InWorld, NewLevelWidget);
 	LevelWidget->AddToViewport();
+
+	return LevelWidget;
 }
 
 UCCPopupWidget* UCCUIManager::AddPopupWidget(UWorld* InWorld, TSubclassOf<UCCPopupWidget> NewPopup)

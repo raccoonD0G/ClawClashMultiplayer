@@ -23,6 +23,7 @@ class CLAWCLASHMULTIPLAYER_API UCCSpawnManager : public UObject
 public:
 	UCCSpawnManager();
 	static UCCSpawnManager* GetInstance();
+	static void DestroyInstance();
 	void Init();
 
 protected:

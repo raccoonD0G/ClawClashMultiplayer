@@ -147,7 +147,7 @@ void ACCTileMapActor::PostInitializeComponents()
 
         TArray<UCCRoom*> RoomArr;
         TArray<UCCPlatform*> PlatformArr;
-        GenerateRooms(RoomArr, TileMapWidth, TileMapHeight, MinRoomHeight, MinRoomWidth);
+        GenerateRooms(RoomArr, TileMapWidth, TileMapHeight, MinRoomWidth, MinRoomHeight);
         for (UCCRoom* Room : RoomArr)
         {
             PlatformArr.Add(Room->GeneratePlatform());

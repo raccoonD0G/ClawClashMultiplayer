@@ -23,31 +23,4 @@ public:
     virtual void Init() override;
     virtual void OnStart() override;
     virtual void Shutdown() override;
-
-    UFUNCTION(BlueprintCallable, Category = "UI Management")
-    void InitializeUI();
-
-// TimerSection
-public:
-    void StartGameTimer();
-
-protected:
-    FTimerHandle GameTimerHandle;
-    const int32 TotalGameTime = 180;
-    int32 RemainingGameTime;
-
-    void UpdateGameTimer();
-
-public:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Time")
-    int32 Minute;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Time")
-    int32 Second;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-    TSubclassOf<class UCCTimerWidget> TimerWidgetClass;
-
-    UPROPERTY(EditAnywhere)
-    TObjectPtr<class UCCTimerWidget> TimerWidgetInstance;
 };

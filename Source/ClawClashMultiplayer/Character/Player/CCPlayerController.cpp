@@ -9,6 +9,7 @@
 #include "ClawClashMultiplayer/Components/ExpComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "ClawClashMultiplayer/CCPlayerSpawner.h"
+#include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
 
 ACCPlayerController::ACCPlayerController()
 {
@@ -23,41 +24,7 @@ void ACCPlayerController::BeginPlay()
 	SetInputMode(InputMode);
 }
 
-void ACCPlayerController::OnPossess(APawn* aPawn)
-{
-    Super::OnPossess(aPawn);
-}
-
-void ACCPlayerController::PostSeamlessTravel()
-{
-    Super::PostSeamlessTravel();
-}
-
 void ACCPlayerController::OnRep_Pawn()
 {
     Super::OnRep_Pawn();
-
-    if (!GetPawn())
-    {
-        return;
-    }
-
-    if (IsLocalController())
-    {
-        if (BattleWidgetClass)
-        {
-            BattleWidget = CreateWidget<UCCBattleWidget>(GetWorld(), BattleWidgetClass);
-
-            if (BattleWidget)
-            {
-                
-                if (GetPawn()->FindComponentByClass<UExpComponent>())
-                {
-                    BattleWidget->Init(GetPawn()->FindComponentByClass<UExpComponent>());
-                }
-
-                BattleWidget->AddToViewport();
-            }
-        }
-    }
 }

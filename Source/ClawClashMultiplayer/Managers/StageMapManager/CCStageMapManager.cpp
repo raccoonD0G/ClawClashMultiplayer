@@ -34,6 +34,15 @@ UCCStageMapManager* UCCStageMapManager::GetInstance()
     return Instance;
 }
 
+void UCCStageMapManager::DestroyInstance()
+{
+    if (Instance)
+    {
+        Instance->RemoveFromRoot();
+        Instance = nullptr;
+    }
+}
+
 void UCCStageMapManager::Init()
 {
     bIsFieldGenerated = false;

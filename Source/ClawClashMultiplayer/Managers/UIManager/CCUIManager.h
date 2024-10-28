@@ -22,6 +22,7 @@ protected:
 
 public:
 	static UCCUIManager* GetInstance();
+	static void DestroyInstance();
 
 // Level Section
 protected:
@@ -29,7 +30,8 @@ protected:
 	TObjectPtr<UCCLevelWidget> LevelWidget;
 
 public:
-	void OpenLevelWidget(UWorld* InWorld, TSubclassOf<UCCPopupWidget> NewLevelWidget);
+	UCCLevelWidget* OpenLevelWidget(UWorld* InWorld, TSubclassOf<UCCLevelWidget> NewLevelWidget);
+	FORCEINLINE UCCLevelWidget* GetLevelWidget() const { return LevelWidget; }
 
 // Popup Section
 protected:

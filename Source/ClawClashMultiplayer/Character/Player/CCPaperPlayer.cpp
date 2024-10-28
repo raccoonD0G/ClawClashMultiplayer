@@ -22,6 +22,8 @@
 #include "ClawClashMultiplayer/Managers/StageMapManager/CCStageMapManager.h"
 #include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
 #include "ClawClashMultiplayer/UI/CCPopupWidget.h"
+#include "ClawClashMultiplayer/UI/CCBattleWidget.h"
+#include "ClawClashMultiplayer/Components/ExpComponent.h"
 
 
 ACCPaperPlayer::ACCPaperPlayer() : Super()
@@ -84,6 +86,9 @@ ACCPaperPlayer::ACCPaperPlayer() : Super()
 	bReplicates = true;
 
 	PreviousInputVector = FVector2D::Zero();
+
+	bIsCompReady = false;
+	bIsControllerReady = false;
 }
 
 void ACCPaperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -103,6 +108,11 @@ void ACCPaperPlayer::BeginPlay()
 	Super::BeginPlay();
 
 	SetCurrentState(EPlayerState::Idle);
+
+	if (bIsControllerReady)
+	{
+		AttatchExpCompToBattleWidget();
+	}
 }
 
 void ACCPaperPlayer::Tick(float DeltaTime)
@@ -160,6 +170,8 @@ void ACCPaperPlayer::PostInitializeComponents()
 	Super::PostInitializeComponents();
 	HealthComponent = GetComponentByClass<UHealthComponent>();
 	WeaponComponent = GetComponentByClass<UWeaponComponent>();
+
+	bIsCompReady = true;
 }
 
 void ACCPaperPlayer::PossessedBy(AController* NewController)
@@ -174,9 +186,20 @@ void ACCPaperPlayer::PossessedBy(AController* NewController)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Log, TEXT("Not Yet"));
 			UCCStageMapManager::GetInstance()->OnMapGenerated.AddDynamic(this, &ACCPaperPlayer::Respawn);
 		}
+	}
+}
+
+void ACCPaperPlayer::OnRep_Controller()
+{
+	Super::OnRep_Controller();
+
+	bIsControllerReady = true;
+
+	if (bIsCompReady)
+	{
+		AttatchExpCompToBattleWidget();
 	}
 }
 
@@ -483,12 +506,16 @@ void ACCPaperPlayer::OnDeath()
 {
 	if (HasAuthority())
 	{
-		FTimerHandle RespawnTimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ACCPaperPlayer::Respawn, 5.0f, false);
-		Client_DisableInput();
-		Client_ShowDeathWidget();
-		Multicast_SetGraySprite();
-		GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCInvinciblePlayer"));
+		if (CurrentState != EPlayerState::Died)
+		{
+			SetCurrentState(EPlayerState::Died);
+			FTimerHandle RespawnTimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ACCPaperPlayer::Respawn, 5.0f, false);
+			Client_DisableInput();
+			Client_ShowDeathWidget();
+			Multicast_SetGraySprite();
+			GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCInvinciblePlayer"));
+		}
 	}
 }
 
@@ -586,6 +613,23 @@ void ACCPaperPlayer::Client_EnableInput_Implementation()
 		{
 			Subsystem->ClearAllMappings();
 			Subsystem->AddMappingContext(InputMappingContext, 0);
+		}
+	}
+}
+
+void ACCPaperPlayer::AttatchExpCompToBattleWidget()
+{
+	if (IsLocallyControlled())
+	{
+		if (UCCUIManager::GetInstance()->GetLevelWidget())
+		{
+			if (UCCBattleWidget* BattleWidget = Cast<UCCBattleWidget>(UCCUIManager::GetInstance()->GetLevelWidget()))
+			{
+				if (UExpComponent* Exp = GetComponentByClass<UExpComponent>())
+				{
+					BattleWidget->Init(Exp);
+				}
+			}
 		}
 	}
 }

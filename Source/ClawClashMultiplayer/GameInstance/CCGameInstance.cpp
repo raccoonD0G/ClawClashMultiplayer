@@ -5,14 +5,16 @@
 #include "GameFramework/GameUserSettings.h"
 
 #include "ClawClashMultiplayer/Managers/CCGameManager.h"
-
 #include "ClawClashMultiplayer/UI/CCTimerWidget.h"
 #include "Blueprint/UserWidget.h"
+#include <ClawClashMultiplayer/Managers/TreeManager/CCTreeManager.h>
+#include "ClawClashMultiplayer/Managers/StageMapManager/CCStageMapManager.h"
+#include "ClawClashMultiplayer/Managers/SpawnManager/CCSpawnManager.h"
+#include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
 
 
 UCCGameInstance::UCCGameInstance()
 {
-    RemainingGameTime = TotalGameTime;
 }
 
 void UCCGameInstance::Init()
@@ -24,11 +26,6 @@ void UCCGameInstance::OnStart()
 {
     Super::OnStart();
 
-    // Initialize
-    InitializeUI();
-
-    StartGameTimer();
-
     UGameUserSettings* UserSettings = GEngine->GetGameUserSettings();
     UserSettings->SetScreenResolution(FIntPoint(1920, 1200));
     UserSettings->ApplySettings(true);
@@ -37,39 +34,10 @@ void UCCGameInstance::OnStart()
 void UCCGameInstance::Shutdown()
 {
     Super::Shutdown();
-}
 
-void UCCGameInstance::InitializeUI()
-{
-    if (IsValid(TimerWidgetClass))
-    {
-        TimerWidgetInstance = CreateWidget<UCCTimerWidget>(this, TimerWidgetClass);
-        if (IsValid(TimerWidgetInstance))
-        {
-            TimerWidgetInstance->AddToViewport();
-            TimerWidgetInstance->SetVisibility(ESlateVisibility::Visible);
-        }
-    }
-}
-
-void UCCGameInstance::StartGameTimer()
-{
-    GetWorld()->GetTimerManager().SetTimer(GameTimerHandle, this, &UCCGameInstance::UpdateGameTimer, 1.0f, true);
-}
-
-void UCCGameInstance::UpdateGameTimer()
-{
-    RemainingGameTime--;
-
-    Minute = RemainingGameTime / 60;
-    Second = RemainingGameTime % 60;
-
-    TimerWidgetInstance->UpdateTimerDisplay(Minute, Second);
-
-    if (RemainingGameTime <= 0)
-    {
-        GetWorld()->GetTimerManager().ClearTimer(GameTimerHandle);
-
-        // GameResultCode Here
-    }
+    UCCGameManager::DestroyInstance();
+    UCCTreeManager::DestroyInstance();
+    UCCStageMapManager::DestroyInstance();
+    UCCSpawnManager::DestroyInstance();
+    UCCUIManager::DestroyInstance();
 }

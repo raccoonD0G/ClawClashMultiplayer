@@ -16,18 +16,8 @@ void UCCGameLobby::NativeConstruct()
 	EntryGameState = GetWorld()->GetGameState<ACCLobbyGameState>();
 	EntryGameState->OnPlayerCountChangedEvent.AddDynamic(this, &UCCGameLobby::OnPlayerCountChange);
 
-	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
-	if (ACCTeamPlayerState* PlayerState = Cast<ACCTeamPlayerState>(Controller))
-	{
-		if (PlayerState->GetTeam() == EPlayerTeam::Blue)
-		{
-			TeamText->SetText(FText::FromString(*FString::Printf(TEXT("You are Blue Team"))));
-		}
-		else
-		{
-			TeamText->SetText(FText::FromString(*FString::Printf(TEXT("You are Red Team"))));
-		}
-	}
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UCCGameLobby::SetTeamText, 0.1f, false);
 
 	EntryGameState->OnReadyChangedEvent.AddDynamic(this, &UCCGameLobby::OnReadyChange);
 	ReadyButton->OnClicked.AddDynamic(this, &UCCGameLobby::SetReady);
@@ -78,5 +68,22 @@ void UCCGameLobby::OnReadyChange(bool bIsRedPlayerReady, bool bIsBluePlayerReady
 	if (bIsRedPlayerReady && bIsBluePlayerReady)
 	{
 		ExplainText->SetText(FText::FromString(*FString::Printf(TEXT("Game Will Start Soon..."))));
+	}
+}
+
+void UCCGameLobby::SetTeamText()
+{
+	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
+	ACCTeamPlayerState* PlayerState = (Controller->GetPlayerState<ACCTeamPlayerState>());
+	if (PlayerState)
+	{
+		if (PlayerState->GetTeam() == EPlayerTeam::Blue)
+		{
+			TeamText->SetText(FText::FromString(*FString::Printf(TEXT("You are Blue Team"))));
+		}
+		else
+		{
+			TeamText->SetText(FText::FromString(*FString::Printf(TEXT("You are Red Team"))));
+		}
 	}
 }

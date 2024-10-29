@@ -49,7 +49,6 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
 	virtual void PossessedBy(AController* NewController) override;
-	virtual void OnRep_Controller() override;
 
 	void UpdateIdle();
 	void UpdateMove();
@@ -179,7 +178,7 @@ protected:
 
 public:
 	FORCEINLINE void AddJumpPowerMultipliers(TFunction<float()> Func) { JumpPowerMultipliers.Add(Func); }
-	FORCEINLINE void AddMoveSpeedMultipliers(TFunction<float()> Func) { MoveSpeedMultipliers.Add(Func); }
+	FORCEINLINE void AddMoveSpeedMultipliers(TFunction<float()> Func) { MoveSpeedMultipliers.Add(Func); Multicast_ResetMoveSpeed(); }
 	FORCEINLINE void AddAttackPowerMultipliers(TFunction<float()> Func) { AttackPowerMultipliers.Add(Func); }
 	FORCEINLINE void AddAttackRangeMultipliers(TFunction<float()> Func) { AttackRangeMultipliers.Add(Func); }
 	FORCEINLINE void AddOccupySpeedMultipliers(TFunction<float()> Func) { OccupySpeedMultipliers.Add(Func); }
@@ -219,8 +218,11 @@ protected:
 
 	FOnDeath OnDeathEvent;
 
-	UFUNCTION()
-	void Respawn();
+	FTimerHandle TeleportTimerHandle;
+
+	UFUNCTION(Server, Reliable)
+	void Server_Respawn();
+	void Server_Respawn_Implementation();
 
 	void BackToRespawnPos();
 
@@ -256,4 +258,10 @@ protected:
 	bool bIsCompReady;
 	bool bIsControllerReady;
 	void AttatchExpCompToBattleWidget();
+
+// MoveSpeed Section
+public:
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ResetMoveSpeed();
+	void Multicast_ResetMoveSpeed_Implementation();
 };

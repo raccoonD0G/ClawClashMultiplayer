@@ -113,6 +113,8 @@ void ACCTileMapActor::BeginPlay()
         UCCStageMapManager::GetInstance()->TurnTrueIsColliderGenerated();
         UCCStageMapManager::GetInstance()->TurnTrueIsSpriteGenerated();
 
+        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
+
         if (MapBound)
         {
             MapBound->OnComponentEndOverlap.AddDynamic(this, &ACCTileMapActor::OnEndOverlap);
@@ -211,11 +213,6 @@ void ACCTileMapActor::OnRep_FieldStructArr()
     FieldTileMapComponent->RebuildCollision();
 
     UCCStageMapManager::GetInstance()->TurnTrueIsFieldGenerated();
-
-    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
-    {
-        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
-    }
 }
 
 FVector ACCTileMapActor::GetWorldSpaceStartPos(UCCField* Field) const
@@ -510,11 +507,6 @@ void ACCTileMapActor::OnRep_FieldColliderArr()
             this->AddInstanceComponent(FieldCollider);
         }
     }
-
-    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
-    {
-        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
-    }
 }
     
 
@@ -528,11 +520,6 @@ void ACCTileMapActor::OnRep_FieldTriggerArr()
             FieldTrigger->AttachToComponent(FieldTileMapComponent, FAttachmentTransformRules::KeepRelativeTransform);
             this->AddInstanceComponent(FieldTrigger);
         }
-    }
-
-    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
-    {
-        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
     }
 }
 
@@ -727,11 +714,6 @@ void ACCTileMapActor::OnRep_SpriteComponentInfoArr()
     }
 
     UCCStageMapManager::GetInstance()->TurnTrueIsSpriteGenerated();
-
-    if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
-    {
-        UCCStageMapManager::GetInstance()->OnMapGenerated.Broadcast();
-    }
 }
 
 FSpawnableField ACCTileMapActor::ChangeIntoSpawnableField(UCCField* Field, ESpawnableType SpawnableType, int32 MaxCharacterNum)

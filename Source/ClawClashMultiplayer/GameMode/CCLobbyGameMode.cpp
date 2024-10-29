@@ -76,7 +76,10 @@ void ACCLobbyGameMode::SetBluePlayerReady()
 
 void ACCLobbyGameMode::StartMatchInSec(float Sec)
 {
-	GetWorld()->GetTimerManager().SetTimer(Handle, this, &ACCLobbyGameMode::StartMatch, Sec, false, Sec);
+	if (!GetWorld()->GetTimerManager().IsTimerActive(Handle))
+	{
+		GetWorld()->GetTimerManager().SetTimer(Handle, this, &ACCLobbyGameMode::StartMatch, Sec, false, Sec);
+	}
 }
 
 void ACCLobbyGameMode::StartMatch()
@@ -86,12 +89,4 @@ void ACCLobbyGameMode::StartMatch()
 		FString LevelName = TEXT("/Game/Maps/BattleLevel");
 		GetWorld()->ServerTravel(LevelName, true);
 	}
-}
-
-void ACCLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
-{
-	ACCTeamPlayerState* OldPlayerState = Cast<ACCTeamPlayerState>(C->PlayerState);
-	Super::HandleSeamlessTravelPlayer(C);
-	ACCTeamPlayerState* NewPlayerState = Cast<ACCTeamPlayerState>(C->PlayerState);
-	NewPlayerState->SetTeam(OldPlayerState->GetTeam());
 }

@@ -5,13 +5,14 @@
 #include "Net/UnrealNetwork.h"
 #include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
 #include "ClawClashMultiplayer/UI/CCPopupWidget.h"
+#include "ClawClashMultiplayer/UI/CCGameLobby.h"
 
 void ACCLobbyGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	if (LobbyWidgetClass)
 	{
-		UCCUIManager::GetInstance()->AddPopupWidget(GetWorld(), LobbyWidgetClass);
+		LobbyWidget = Cast<UCCGameLobby>(UCCUIManager::GetInstance()->AddPopupWidget(GetWorld(), LobbyWidgetClass));
 	}
 }
 

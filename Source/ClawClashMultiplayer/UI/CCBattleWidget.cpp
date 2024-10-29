@@ -19,14 +19,22 @@ void UCCBattleWidget::Init(UExpComponent* ExpComponent)
 
 	FString LevelString = FString::Printf(TEXT("Lv. %d"), ExpComp->GetLevel());
 	LevelText->SetText(FText::FromString(LevelString));
-
 	ExpBar->SetPercent(ExpComp->GetExpPercent());
 
+	ExpComp->OnExpChange.RemoveDynamic(this, &UCCBattleWidget::OnExpChange);
 	ExpComp->OnExpChange.AddDynamic(this, &UCCBattleWidget::OnExpChange);
+
+	ExpComp->OnLevelChange.RemoveDynamic(this, &UCCBattleWidget::OnLevelChange);
 	ExpComp->OnLevelChange.AddDynamic(this, &UCCBattleWidget::OnLevelChange);
 
-	UCCTreeManager::GetInstance()->OnCountUpdateEvent.AddDynamic(this, &UCCBattleWidget::OnCountChange);
+	UCCTreeManager* TreeManager = UCCTreeManager::GetInstance();
+	if (TreeManager)
+	{
+		TreeManager->OnCountUpdateEvent.RemoveDynamic(this, &UCCBattleWidget::OnCountChange);
+		TreeManager->OnCountUpdateEvent.AddDynamic(this, &UCCBattleWidget::OnCountChange);
+	}
 }
+
 
 void UCCBattleWidget::NativeConstruct()
 {

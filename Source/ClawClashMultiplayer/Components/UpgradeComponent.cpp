@@ -127,6 +127,11 @@ void UUpgradeComponent::Server_SetMoveSpeedLevel_Implementation(int32 InMoveSpee
 {
 	MoveSpeedLevel = InMoveSpeedLevel;
 	SetMoveSpeedMultiplier(1.0f + MoveSpeedLevel * 0.2f);
+
+	if (Player && GetOwner()->HasAuthority())
+	{
+		Player->Multicast_ResetMoveSpeed();
+	}
 }
 
 void UUpgradeComponent::Server_SetJumpPowerLevel_Implementation(int32 InJumpPowerLevel)

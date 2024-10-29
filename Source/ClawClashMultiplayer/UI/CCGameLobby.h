@@ -46,4 +46,6 @@ protected:
 
 	UFUNCTION()
 	void OnReadyChange(bool bIsRedPlayerReady, bool bIsBluePlayerReady);
+
+	void SetTeamText();
 };

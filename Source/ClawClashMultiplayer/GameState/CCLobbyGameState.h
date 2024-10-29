@@ -11,7 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerCountChanged, int32, Player
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReadyChanged, bool, bIsRedPlayerReady, bool, bIsBluePlayerReady);
 
 class UCCPopupWidget;
-
+class UCCGameLobby;
 /**
  * 
  */
@@ -45,6 +45,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UCCPopupWidget> LobbyWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UCCGameLobby> LobbyWidget;
 
 	UPROPERTY(ReplicatedUsing = OnRep_bIsBluePlayerReady)
 	bool bIsBluePlayerReady;

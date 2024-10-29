@@ -43,8 +43,6 @@ protected:
 	UFUNCTION()
 	void StartMatch();
 
-	void HandleSeamlessTravelPlayer(AController*& C);
-
 	FTimerHandle Handle;
 	
 };

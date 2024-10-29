@@ -109,10 +109,7 @@ void ACCPaperPlayer::BeginPlay()
 
 	SetCurrentState(EPlayerState::Idle);
 
-	if (bIsControllerReady)
-	{
-		AttatchExpCompToBattleWidget();
-	}
+	AttatchExpCompToBattleWidget();
 }
 
 void ACCPaperPlayer::Tick(float DeltaTime)
@@ -182,24 +179,14 @@ void ACCPaperPlayer::PossessedBy(AController* NewController)
 	{
 		if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
 		{
-			Respawn();
+			UE_LOG(LogTemp, Log, TEXT("Invoke0"));
+			Server_Respawn();
 		}
 		else
 		{
-			UCCStageMapManager::GetInstance()->OnMapGenerated.AddDynamic(this, &ACCPaperPlayer::Respawn);
+			UE_LOG(LogTemp, Log, TEXT("Invoke1"))
+			UCCStageMapManager::GetInstance()->OnMapGenerated.AddDynamic(this, &ACCPaperPlayer::Server_Respawn);
 		}
-	}
-}
-
-void ACCPaperPlayer::OnRep_Controller()
-{
-	Super::OnRep_Controller();
-
-	bIsControllerReady = true;
-
-	if (bIsCompReady)
-	{
-		AttatchExpCompToBattleWidget();
 	}
 }
 
@@ -510,7 +497,7 @@ void ACCPaperPlayer::OnDeath()
 		{
 			SetCurrentState(EPlayerState::Died);
 			FTimerHandle RespawnTimerHandle;
-			GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ACCPaperPlayer::Respawn, 5.0f, false);
+			GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &ACCPaperPlayer::Server_Respawn, 5.0f, false);
 			Client_DisableInput();
 			Client_ShowDeathWidget();
 			Multicast_SetGraySprite();
@@ -519,12 +506,14 @@ void ACCPaperPlayer::OnDeath()
 	}
 }
 
-void ACCPaperPlayer::Respawn()
+void ACCPaperPlayer::Server_Respawn_Implementation()
 {
 	if (HasAuthority())
 	{
-		FTimerHandle TeleportTimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TeleportTimerHandle, this, &ACCPaperPlayer::BackToRespawnPos, 0.1f, false);
+		if (!GetWorld()->GetTimerManager().IsTimerActive(TeleportTimerHandle))
+		{
+			GetWorld()->GetTimerManager().SetTimer(TeleportTimerHandle, this, &ACCPaperPlayer::BackToRespawnPos, 0.1f, false);
+		}
 	}
 }
 
@@ -553,11 +542,14 @@ void ACCPaperPlayer::BackToRespawnPos()
 		if (PlayerSpawner != nullptr)
 		{
 			SetActorLocation(PlayerSpawner->GetActorLocation());
+			UE_LOG(LogTemp, Log, TEXT("Enabled"));
 			Client_EnableInput();
 			GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCBlockedPlayer"));
 		}
 
 		HealthComponent->GetHeal(HealthComponent->GetMaxHp());
+
+		SetCurrentState(EPlayerState::Idle);
 	}
 }
 
@@ -632,4 +624,15 @@ void ACCPaperPlayer::AttatchExpCompToBattleWidget()
 			}
 		}
 	}
+}
+
+void ACCPaperPlayer::Multicast_ResetMoveSpeed_Implementation()
+{
+	float MoveSpeedMultiplier = 1.0f;
+
+	for (TFunction<float()> Func : MoveSpeedMultipliers)
+	{
+		MoveSpeedMultiplier *= Func();
+	}
+	GetCharacterMovement()->MaxWalkSpeed = 5000.0f * MoveSpeedMultiplier;
 }

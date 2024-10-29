@@ -31,7 +31,7 @@ FIntVector2 UCCRoom::GetCenter() const
 UCCPlatform* UCCRoom::GeneratePlatform()
 {
     int32 FloorStartX = FMath::RandRange(TileMapPos.X, TileMapPos.X + Width - MinPlatformLength);
-    int32 FloorStartY = FMath::RandRange(TileMapPos.Y + MinPlatformHeight, TileMapPos.Y + Height - 1);
+    int32 FloorStartY = FMath::RandRange(TileMapPos.Y + MinPlatformHeight - 1, TileMapPos.Y + Height - 1);
     Platform = NewObject<UCCPlatform>();
     int32 FloorLength = FMath::RandRange(MinPlatformLength, Width - FloorStartX + TileMapPos.X);
     Platform->Init(FIntVector2(FloorStartX, FloorStartY), FloorLength);

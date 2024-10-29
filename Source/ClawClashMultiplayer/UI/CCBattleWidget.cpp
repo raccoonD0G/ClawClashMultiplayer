@@ -7,6 +7,7 @@
 #include "Components/ProgressBar.h"
 #include "ClawClashMultiplayer/Character/Player/CCPaperPlayer.h"
 #include "ClawClashMultiplayer/Managers/TreeManager/CCTreeManager.h"
+#include "Components/Image.h"
 
 void UCCBattleWidget::Init(UExpComponent* ExpComponent)
 {
@@ -66,4 +67,14 @@ void UCCBattleWidget::SetTimeText(int32 NewRemainingGameTime)
 	int32 Sec = NewRemainingGameTime % 60;
 
 	TimeText->SetText(FText::FromString(FString::Printf(TEXT("%d:%d"), Min, Sec)));
+}
+
+void UCCBattleWidget::ShowMiniMap()
+{
+	MiniMap->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UCCBattleWidget::HideMiniMap()
+{
+	MiniMap->SetVisibility(ESlateVisibility::Hidden);
 }

@@ -101,6 +101,7 @@ void ACCPaperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACCPaperPlayer::Server_StartReadyJump);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACCPaperPlayer::Server_ReleaseJump);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ACCPaperPlayer::Attack);
+	EnhancedInputComponent->BindAction(SetSpawnPosAction, ETriggerEvent::Triggered, this, &ACCPaperPlayer::Server_SetNewSpawnPos);
 }
 
 void ACCPaperPlayer::BeginPlay()
@@ -110,6 +111,23 @@ void ACCPaperPlayer::BeginPlay()
 	SetCurrentState(EPlayerState::Idle);
 
 	AttatchExpCompToBattleWidget();
+
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+
+	if (IsLocallyControlled())
+	{
+		UCCBattleWidget* BattleWidget;
+
+		if (UCCUIManager::GetInstance()->GetLevelWidget())
+		{
+			BattleWidget = Cast<UCCBattleWidget>(UCCUIManager::GetInstance()->GetLevelWidget());
+			if (BattleWidget)
+			{
+				EnhancedInputComponent->BindAction(ShowMiniMapAction, ETriggerEvent::Started, BattleWidget, &UCCBattleWidget::ShowMiniMap);
+				EnhancedInputComponent->BindAction(ShowMiniMapAction, ETriggerEvent::Completed, BattleWidget, &UCCBattleWidget::HideMiniMap);
+			}
+		}
+	}
 }
 
 void ACCPaperPlayer::Tick(float DeltaTime)
@@ -188,6 +206,24 @@ void ACCPaperPlayer::PossessedBy(AController* NewController)
 			UCCStageMapManager::GetInstance()->OnMapGenerated.AddDynamic(this, &ACCPaperPlayer::Server_Respawn);
 		}
 	}
+
+	/*if (HasAuthority())
+	{
+		TArray<AActor*> FoundSpawners;
+
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCPlayerSpawner::StaticClass(), FoundSpawners);
+
+		for (AActor* Spawner : FoundSpawners)
+		{
+			PlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
+			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(GetPlayerState());
+			if (PlayerSpawner->GetPlayerTeam() == TeamPlayerState->GetTeam())
+			{
+				UE_LOG(LogTemp, Log, TEXT("Found"));
+				break;
+			}
+		}
+	}*/
 }
 
 void ACCPaperPlayer::UpdateIdle()
@@ -525,13 +561,13 @@ void ACCPaperPlayer::BackToRespawnPos()
 
 		TArray<AActor*> PlayerSpawners;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCPlayerSpawner::StaticClass(), PlayerSpawners);
-		ACCPlayerSpawner* PlayerSpawner = nullptr;
+		ACCPlayerSpawner* FoundPlayerSpawner = nullptr;
 
 		for (AActor* Spawner : PlayerSpawners)
 		{
-			PlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
+			FoundPlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
 			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(GetPlayerState());
-			if (TeamPlayerState->GetTeam() == PlayerSpawner->GetPlayerTeam())
+			if (TeamPlayerState->GetTeam() == FoundPlayerSpawner->GetPlayerTeam())
 			{
 				break;
 			}
@@ -539,9 +575,10 @@ void ACCPaperPlayer::BackToRespawnPos()
 
 		Multicast_SetNormalSprite();
 
-		if (PlayerSpawner != nullptr)
+		if (FoundPlayerSpawner != nullptr)
 		{
-			SetActorLocation(PlayerSpawner->GetActorLocation());
+			PlayerSpawner = FoundPlayerSpawner;
+			SetActorLocation(FoundPlayerSpawner->GetActorLocation());
 			UE_LOG(LogTemp, Log, TEXT("Enabled"));
 			Client_EnableInput();
 			GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCBlockedPlayer"));
@@ -635,4 +672,12 @@ void ACCPaperPlayer::Multicast_ResetMoveSpeed_Implementation()
 		MoveSpeedMultiplier *= Func();
 	}
 	GetCharacterMovement()->MaxWalkSpeed = 5000.0f * MoveSpeedMultiplier;
+}
+
+void ACCPaperPlayer::Server_SetNewSpawnPos_Implementation()
+{
+	if (PlayerSpawner)
+	{
+		PlayerSpawner->SetActorLocation(GetActorLocation());
+	}
 }

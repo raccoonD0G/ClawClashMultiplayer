@@ -269,7 +269,7 @@ void ACCTileMapActor::GenerateRooms(TArray<UCCRoom*>& OutRooms, int32 MapWidth, 
     TObjectPtr<UCCRoom> InitialSpace = NewObject<UCCRoom>();
     InitialSpace->Init(FIntVector2(0, 0), MapWidth, MapHeight, MinRoomWidth, MinRoomHeight);
     int32 MaxDepth = 20; // ¿Á±Õ ±Ì¿Ã ¡∂¡§
-    SplitSpace(OutRooms, InitialSpace, MinWidth - 1, MinHeight - 1, MaxDepth);
+    SplitSpace(OutRooms, InitialSpace, MinWidth, MinHeight, MaxDepth);
 }
 
 float ACCTileMapActor::CalculatePlatformDistance(const UCCPlatform& Platform0, const UCCPlatform& Platform1, FIntVector2& Pos1, FIntVector2& Pos2) const

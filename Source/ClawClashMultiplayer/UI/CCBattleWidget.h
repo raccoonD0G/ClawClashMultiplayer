@@ -11,6 +11,7 @@ class UProgressBar;
 class UExpComponent;
 class UTextBlock;
 class ACCPaperPlayer;
+class UImage;
 
 /**
  * 
@@ -39,6 +40,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> TimeText;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> MiniMap;
+
 	UPROPERTY()
 	TObjectPtr<UExpComponent> ExpComp;
 
@@ -57,4 +61,12 @@ protected:
 public:
 	UFUNCTION()
 	void SetTimeText(int32 NewRemainingGameTime);
+
+// Minimap Section
+public:
+	UFUNCTION()
+	void ShowMiniMap();
+
+	UFUNCTION()
+	void HideMiniMap();
 };

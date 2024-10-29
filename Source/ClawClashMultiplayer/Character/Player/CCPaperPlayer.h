@@ -88,19 +88,24 @@ protected:
 	
 // Input Section
 protected:
+	float MaxJumpForce;
 
-	float MaxJumpForce = 0.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
 	TObjectPtr<class UInputAction> JumpAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
 	TObjectPtr<class UInputAction> MoveAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
 	TObjectPtr<class UInputAction> AttackAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
+	TObjectPtr<class UInputAction> ShowMiniMapAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
+	TObjectPtr<class UInputAction> SetSpawnPosAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
 	TObjectPtr<class UInputMappingContext> InputMappingContext;
 	
 	void LeftRightMove(const FInputActionValue& Value);
@@ -264,4 +269,13 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ResetMoveSpeed();
 	void Multicast_ResetMoveSpeed_Implementation();
+
+// Spawner Section
+protected:
+	UPROPERTY()
+	TObjectPtr<class ACCPlayerSpawner> PlayerSpawner;
+
+	UFUNCTION(Server,Reliable)
+	void Server_SetNewSpawnPos();
+	void Server_SetNewSpawnPos_Implementation();
 };

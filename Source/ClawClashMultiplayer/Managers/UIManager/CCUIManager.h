@@ -35,6 +35,8 @@ public:
 
 // Popup Section
 protected:
+	int32 ZOrder = 1;
+
 	UPROPERTY()
 	TArray<TObjectPtr<UCCPopupWidget>> PopupWidgets;
 

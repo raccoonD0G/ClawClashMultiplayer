@@ -1,16 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CCPlayerController.h"
+#include "ClawClashMultiplayer/Character/Player/CCResaultPlayerController.h"
 
-
-ACCPlayerController::ACCPlayerController()
+ACCResaultPlayerController::ACCResaultPlayerController()
 {
 	bReplicates = true;
 }
 
 
-void ACCPlayerController::BeginPlay()
+void ACCResaultPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 

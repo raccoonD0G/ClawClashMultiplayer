@@ -10,8 +10,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerCountChanged, int32, Player
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReadyChanged, bool, bIsRedPlayerReady, bool, bIsBluePlayerReady);
 
-class UCCPopupWidget;
+class UCCLevelWidget;
 class UCCGameLobby;
+class UCCLoginWidget;
 /**
  * 
  */
@@ -44,7 +45,7 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UCCPopupWidget> LobbyWidgetClass;
+	TSubclassOf<UCCLevelWidget> LobbyWidgetClass;
 
 	UPROPERTY()
 	TObjectPtr<UCCGameLobby> LobbyWidget;
@@ -63,5 +64,5 @@ protected:
 
 public:
 	FOnReadyChanged OnReadyChangedEvent;
-	
+
 };

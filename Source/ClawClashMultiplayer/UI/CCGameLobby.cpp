@@ -7,7 +7,7 @@
 #include "Components/TextBlock.h"
 #include <ClawClashMultiplayer/PlayerState/CCTeamPlayerState.h>
 #include "Components/Button.h"
-#include <ClawClashMultiplayer/Character/Player/CCPlayerController.h>
+#include <ClawClashMultiplayer/Character/Player/CCLobbyPlayerController.h>
 
 void UCCGameLobby::NativeConstruct()
 {
@@ -27,7 +27,7 @@ void UCCGameLobby::NativeConstruct()
 void UCCGameLobby::SetReady()
 {
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
-	ACCPlayerController* PlayerController = Cast<ACCPlayerController>(Controller);
+	ACCLobbyPlayerController* PlayerController = Cast<ACCLobbyPlayerController>(Controller);
 
 	if (PlayerController)
 	{

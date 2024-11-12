@@ -36,7 +36,7 @@ UCCLevelWidget* UCCUIManager::OpenLevelWidget(UWorld* InWorld, TSubclassOf<UCCLe
 	}
 
 	LevelWidget = CreateWidget<UCCLevelWidget>(InWorld, NewLevelWidget);
-	LevelWidget->AddToViewport();
+	LevelWidget->AddToViewport(0);
 
 	return LevelWidget;
 }
@@ -46,8 +46,9 @@ UCCPopupWidget* UCCUIManager::AddPopupWidget(UWorld* InWorld, TSubclassOf<UCCPop
 	if (NewPopup)
 	{
 		UCCPopupWidget* Popup = CreateWidget<UCCPopupWidget>(InWorld, NewPopup);
-		Popup->AddToViewport();
+		Popup->AddToViewport(ZOrder);
 		PopupWidgets.Add(Popup);
+		ZOrder++;
 		return Popup;
 	}
 	return nullptr;

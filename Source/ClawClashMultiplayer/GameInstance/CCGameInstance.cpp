@@ -41,3 +41,13 @@ void UCCGameInstance::Shutdown()
     UCCSpawnManager::DestroyInstance();
     UCCUIManager::DestroyInstance();
 }
+
+void UCCGameInstance::AddID(EPlayerTeam Team, FString ID)
+{
+    TeamIDMap.Add(Team, ID);
+}
+
+void UCCGameInstance::RemoveID(EPlayerTeam Team)
+{
+    TeamIDMap.FindAndRemoveChecked(Team);
+}

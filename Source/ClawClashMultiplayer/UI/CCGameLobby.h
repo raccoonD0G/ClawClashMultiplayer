@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ClawClashMultiplayer/UI/CCPopupWidget.h"
+#include "ClawClashMultiplayer/UI/CCLevelWidget.h"
 #include "CCGameLobby.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CLAWCLASHMULTIPLAYER_API UCCGameLobby : public UCCPopupWidget
+class CLAWCLASHMULTIPLAYER_API UCCGameLobby : public UCCLevelWidget
 {
 	GENERATED_BODY()
 	
@@ -48,4 +48,5 @@ protected:
 	void OnReadyChange(bool bIsRedPlayerReady, bool bIsBluePlayerReady);
 
 	void SetTeamText();
+
 };

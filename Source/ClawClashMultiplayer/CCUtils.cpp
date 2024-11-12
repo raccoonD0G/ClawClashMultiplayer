@@ -2,6 +2,7 @@
 
 
 #include "CCUtils.h"
+#include "PlayerState/CCTeamPlayerState.h"
 
 
 int32 UCCUtils::GetEnumLength(UEnum* TargetEnum)

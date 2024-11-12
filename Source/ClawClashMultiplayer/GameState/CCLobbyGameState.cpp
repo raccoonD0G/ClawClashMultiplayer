@@ -7,12 +7,17 @@
 #include "ClawClashMultiplayer/UI/CCPopupWidget.h"
 #include "ClawClashMultiplayer/UI/CCGameLobby.h"
 
+
 void ACCLobbyGameState::BeginPlay()
 {
 	Super::BeginPlay();
-	if (LobbyWidgetClass)
+
+	if (!HasAuthority())
 	{
-		LobbyWidget = Cast<UCCGameLobby>(UCCUIManager::GetInstance()->AddPopupWidget(GetWorld(), LobbyWidgetClass));
+		if (LobbyWidgetClass)
+		{
+			LobbyWidget = Cast<UCCGameLobby>(UCCUIManager::GetInstance()->OpenLevelWidget(GetWorld(), LobbyWidgetClass));
+		}
 	}
 }
 

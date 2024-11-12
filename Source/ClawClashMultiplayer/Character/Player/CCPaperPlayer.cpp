@@ -197,33 +197,13 @@ void ACCPaperPlayer::PossessedBy(AController* NewController)
 	{
 		if (UCCStageMapManager::GetInstance()->IsTileMapGenerated())
 		{
-			UE_LOG(LogTemp, Log, TEXT("Invoke0"));
 			Server_Respawn();
 		}
 		else
 		{
-			UE_LOG(LogTemp, Log, TEXT("Invoke1"))
 			UCCStageMapManager::GetInstance()->OnMapGenerated.AddDynamic(this, &ACCPaperPlayer::Server_Respawn);
 		}
 	}
-
-	/*if (HasAuthority())
-	{
-		TArray<AActor*> FoundSpawners;
-
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCPlayerSpawner::StaticClass(), FoundSpawners);
-
-		for (AActor* Spawner : FoundSpawners)
-		{
-			PlayerSpawner = Cast<ACCPlayerSpawner>(Spawner);
-			ACCTeamPlayerState* TeamPlayerState = Cast<ACCTeamPlayerState>(GetPlayerState());
-			if (PlayerSpawner->GetPlayerTeam() == TeamPlayerState->GetTeam())
-			{
-				UE_LOG(LogTemp, Log, TEXT("Found"));
-				break;
-			}
-		}
-	}*/
 }
 
 void ACCPaperPlayer::UpdateIdle()
@@ -579,7 +559,6 @@ void ACCPaperPlayer::BackToRespawnPos()
 		{
 			PlayerSpawner = FoundPlayerSpawner;
 			SetActorLocation(FoundPlayerSpawner->GetActorLocation());
-			UE_LOG(LogTemp, Log, TEXT("Enabled"));
 			Client_EnableInput();
 			GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCBlockedPlayer"));
 		}

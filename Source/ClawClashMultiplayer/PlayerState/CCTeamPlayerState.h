@@ -9,6 +9,7 @@
 UENUM()
 enum class EPlayerTeam : uint8
 {
+	None,
 	Red,
 	Blue
 };

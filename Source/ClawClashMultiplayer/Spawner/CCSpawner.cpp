@@ -67,8 +67,6 @@ void ACCSpawner::OnBeginDestroy(ACCPaperNonPlayer* DestroyedCharacter)
 	Mutex.Lock();
 	Charaters.Remove(DestroyedCharacter);
 
-	UE_LOG(LogTemp, Log, TEXT("Remove"));
-
 	if ((!GetWorld()->GetTimerManager().IsTimerActive(TimerHandle)) && Charaters.Num() < MaxCharacterNum)
 	{
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ACCSpawner::SpawnCharacter, SpawnInterval, true, SpawnInterval);

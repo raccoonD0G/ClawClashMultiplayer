@@ -115,7 +115,7 @@ void ACCPaperRaccoon::OnDeath(AActor* Destroyer)
 	UExpComponent* ExpComponent = Destroyer->GetComponentByClass<UExpComponent>();
 	if (ExpComponent)
 	{
-		ExpComponent->AddExp(300);
+		ExpComponent->AddExp(700);
 	}
 	Destroy();
 }

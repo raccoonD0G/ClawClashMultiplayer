@@ -13,7 +13,7 @@
 ACCPaperRat::ACCPaperRat() : Super()
 {
 	IsRightStart = true;
-	ExpAmount = 50;
+	ExpAmount = 100;
 }
 
 void ACCPaperRat::BeginPlay()

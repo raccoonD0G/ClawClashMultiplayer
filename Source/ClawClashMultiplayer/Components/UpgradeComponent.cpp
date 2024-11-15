@@ -137,31 +137,31 @@ void UUpgradeComponent::Server_SetMoveSpeedLevel_Implementation(int32 InMoveSpee
 void UUpgradeComponent::Server_SetJumpPowerLevel_Implementation(int32 InJumpPowerLevel)
 {
 	JumpPowerLevel = InJumpPowerLevel;
-	SetJumpPowerMultiplier(1.0f + JumpPowerLevel * 0.2f);
+	SetJumpPowerMultiplier(1.0f + JumpPowerLevel * 0.4f);
 }
 
 void UUpgradeComponent::Server_SetAttackPowerLevel_Implementation(int32 InAttackPowerLevel)
 {
 	AttackPowerLevel = InAttackPowerLevel;
-	SetAttackPowerMultiplier(1.0f + AttackPowerLevel * 0.2f);
+	SetAttackPowerMultiplier(1.0f + AttackPowerLevel * 0.4f);
 }
 
 void UUpgradeComponent::Server_SetAttackRangeLevel_Implementation(int32 InAttackRangeLevel)
 {
 	AttackRangeLevel = InAttackRangeLevel;
-	SetAttackRangeMultiplier(1.0f + AttackRangeLevel * 0.2f);
+	SetAttackRangeMultiplier(1.0f + AttackRangeLevel * 0.4f);
 }
 
 void UUpgradeComponent::Server_SetExpLevel_Implementation(int32 InExpLevel)
 {
 	ExpLevel = InExpLevel;
-	SetExpMultiplier(1.0f + ExpLevel + 0.2f);
+	SetExpMultiplier(1.0f + ExpLevel + 0.4f);
 }
 
 void UUpgradeComponent::Server_SetOccupySpeedLevel_Implementation(int32 InOccupySpeedLevel)
 {
 	OccupySpeedLevel = InOccupySpeedLevel;
-	SetOccupySpeedMultiplier(1.0f + OccupySpeedLevel * 0.2f);
+	SetOccupySpeedMultiplier(1.0f + OccupySpeedLevel * 0.4f);
 }
 
 void UUpgradeComponent::ShowUpgradePopup(int32 NewLevel)

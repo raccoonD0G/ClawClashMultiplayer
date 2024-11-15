@@ -118,7 +118,7 @@ void ACCPaperBulldog::OnDeath(AActor* Destroyer)
 	UExpComponent* ExpComponent = Destroyer->GetComponentByClass<UExpComponent>();
 	if (ExpComponent)
 	{
-		ExpComponent->AddExp(500);
+		ExpComponent->AddExp(900);
 	}
 	Destroy();
 }

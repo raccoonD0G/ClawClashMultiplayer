@@ -57,12 +57,10 @@ void ACCResaultGameMode::Server_SendGameResult_Implementation(const FString& Use
     FHttpModule* Http = &FHttpModule::Get();
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
 
-    // URL 설정
     FString Url = FString::Printf(TEXT("http://ec2-13-125-230-55.ap-northeast-2.compute.amazonaws.com:5000/%s/gameRecord"), *UserId);
     Request->SetURL(Url);
     Request->SetVerb("POST");
 
-    // JSON 형식의 본문 데이터 설정
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
     TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
@@ -72,14 +70,12 @@ void ACCResaultGameMode::Server_SendGameResult_Implementation(const FString& Use
     JsonObject->SetStringField("redScore", RedScore);
     JsonObject->SetStringField("blueScore", BlueScore);
 
-    // JSON 객체를 문자열로 변환하여 요청 본문에 설정
     FString RequestBody;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
 
     Request->SetContentAsString(RequestBody);
 
-    // 응답 콜백 설정
     Request->OnProcessRequestComplete().BindUObject(this, &ACCResaultGameMode::OnGameResultResponseReceived);
 
     // 요청 실행
@@ -126,4 +122,22 @@ FString ACCResaultGameMode::TeamEnumToString(EPlayerTeam Team)
     }
 
     return EnumPtr->GetNameStringByValue(static_cast<int64>(Team));
+}
+
+void ACCResaultGameMode::Logout(AController* Exiting)
+{
+    Super::Logout(Exiting);
+
+    if (GameState)
+    {
+        if (GameState->PlayerArray.Num() == 1)
+        {
+            if (HasAuthority())
+            {
+                Cast<UCCGameInstance>(GetGameInstance())->ResetGameInstance();
+                FString LevelName = TEXT("/Game/Maps/GameLobbyLevel");
+                GetWorld()->ServerTravel(LevelName, true);
+            }
+        }
+    }
 }

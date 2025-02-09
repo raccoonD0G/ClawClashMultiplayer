@@ -45,6 +45,8 @@ void ACCTileMapActor::BeginPlay()
 
     if (HasAuthority())
     {
+        UE_LOG(LogTemp, Log, TEXT("TileMapBulidStart"));
+
         for (UCCField* Field : FieldArr)
         {
             CreatFieldTile(Field);
@@ -129,10 +131,6 @@ void ACCTileMapActor::PostInitializeComponents()
     if (!UCCStageMapManager::GetInstance()->GetStageMap())
     {
         UCCStageMapManager::GetInstance()->SetStageMap(this);
-    }
-    else
-    {
-        Destroy();
     }
 
     if (HasAuthority())

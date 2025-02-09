@@ -11,6 +11,7 @@
 #include "ClawClashMultiplayer/Managers/StageMapManager/CCStageMapManager.h"
 #include "ClawClashMultiplayer/Managers/SpawnManager/CCSpawnManager.h"
 #include "ClawClashMultiplayer/Managers/UIManager/CCUIManager.h"
+#include "ClawClashMultiplayer/PlayerState/CCTeamPlayerState.h"
 
 
 UCCGameInstance::UCCGameInstance()
@@ -50,4 +51,13 @@ void UCCGameInstance::AddID(EPlayerTeam Team, FString ID)
 void UCCGameInstance::RemoveID(EPlayerTeam Team)
 {
     TeamIDMap.FindAndRemoveChecked(Team);
+}
+
+void UCCGameInstance::ResetGameInstance()
+{
+    TeamIDMap.Empty();
+
+    WinnerTeam = EPlayerTeam::None;
+    BlueScore = 0;
+    RedScore = 0;
 }

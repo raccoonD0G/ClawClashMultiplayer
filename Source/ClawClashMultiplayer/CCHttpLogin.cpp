@@ -35,12 +35,10 @@ void ACCHttpLogin::Server_SendLoginRequest_Implementation(const FString& InUserI
     FHttpModule* Http = &FHttpModule::Get();
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
 
-    // URL 설정
     FString Url = FString::Printf(TEXT("http://ec2-13-125-230-55.ap-northeast-2.compute.amazonaws.com:5000/%s/verify"), *UserId);
     Request->SetURL(Url);
     Request->SetVerb("POST");
 
-    // JSON 형식의 본문 데이터 설정
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
     TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
@@ -55,10 +53,8 @@ void ACCHttpLogin::Server_SendLoginRequest_Implementation(const FString& InUserI
     UCCGameInstance* GameInstance = Cast<UCCGameInstance>(GetGameInstance());
     GameInstance->AddID(Team, UserId);
 
-    // 응답 콜백 설정
     Request->OnProcessRequestComplete().BindUObject(this, &ACCHttpLogin::OnResponseReceived);
 
-    // 요청 실행
     Request->ProcessRequest();
 }
 
@@ -75,13 +71,12 @@ void ACCHttpLogin::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr 
         FString ResponseData = Response->GetContentAsString();
         UE_LOG(LogTemp, Log, TEXT("Response: %s"), *ResponseData);
 
-        // 로그인 성공 여부를 판단할 수 있도록 JSON 파싱 수행 가능
         TSharedPtr<FJsonObject> JsonResponse;
         TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ResponseData);
 
         if (FJsonSerializer::Deserialize(Reader, JsonResponse) && JsonResponse.IsValid())
         {
-            bool bLoginSuccess = JsonResponse->GetBoolField("success"); // 예: JSON 응답에 success 필드가 있을 경우
+            bool bLoginSuccess = JsonResponse->GetBoolField("success");
             if (bLoginSuccess)
             {
                 UE_LOG(LogTemp, Log, TEXT("Login successful!"));

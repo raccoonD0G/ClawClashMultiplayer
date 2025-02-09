@@ -58,14 +58,29 @@ void ACCTree::Tick(float DeltaTime)
 
 	if (HasAuthority())
 	{
+
 		if (BluePlayer && !RedPlayer)
 		{
-			SetRedOccupation(RedOccupation - DeltaTime * OccupySpeed);
+			float OccupySpeedMultiplier = 1.0f;
+
+			for (TFunction<float()> Func : BluePlayer->GetOccupySpeedMultipliers())
+			{
+				OccupySpeedMultiplier *= Func();
+			}
+
+			SetRedOccupation(RedOccupation - DeltaTime * OccupySpeed * OccupySpeedMultiplier);
 			SetStateByRedOccupation();
 		}
 		else if (RedPlayer && !BluePlayer)
 		{
-			SetRedOccupation(RedOccupation + DeltaTime * OccupySpeed);
+			float OccupySpeedMultiplier = 1.0f;
+
+			for (TFunction<float()> Func : RedPlayer->GetOccupySpeedMultipliers())
+			{
+				OccupySpeedMultiplier *= Func();
+			}
+
+			SetRedOccupation(RedOccupation + DeltaTime * OccupySpeed * OccupySpeedMultiplier);
 			SetStateByRedOccupation();
 		}
 	}

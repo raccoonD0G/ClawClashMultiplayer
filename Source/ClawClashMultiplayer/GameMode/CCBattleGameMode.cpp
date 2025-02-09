@@ -8,6 +8,10 @@
 #include "ClawClashMultiplayer/CCPlayerSpawner.h"
 #include "ClawClashMultiplayer/Managers/TreeManager/CCTreeManager.h"
 #include "ClawClashMultiplayer/GameInstance/CCGameInstance.h"
+#include <ClawClashMultiplayer/Managers/CCGameManager.h>
+#include <ClawClashMultiplayer/Managers/SpawnManager/CCSpawnManager.h>
+#include <ClawClashMultiplayer/Managers/UIManager/CCUIManager.h>
+#include <ClawClashMultiplayer/Managers/StageMapManager/CCStageMapManager.h>
 
 ACCBattleGameMode::ACCBattleGameMode()
 {
@@ -52,6 +56,12 @@ void ACCBattleGameMode::EndMatch()
 
 	GameInstance->SetBlueScore(BlueScore);
 	GameInstance->SetRedScore(RedScore);
+
+	UCCGameManager::DestroyInstance();
+	UCCTreeManager::DestroyInstance();
+	UCCStageMapManager::DestroyInstance();
+	UCCSpawnManager::DestroyInstance();
+	UCCUIManager::DestroyInstance();
 
 	FString LevelName = TEXT("/Game/Maps/GameResaultLevel");
 	GetWorld()->ServerTravel(LevelName, true);

@@ -62,6 +62,7 @@ void ACCTimer::UpdateGameTimer()
 
     if (RemainingGameTime <= 0)
     {
+        RemainingGameTime = TotalGameTime;
         GetWorld()->GetTimerManager().ClearTimer(GameTimerHandle);
         OnTimerEndEvent.Broadcast();
     }

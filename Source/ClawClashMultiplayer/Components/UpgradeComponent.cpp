@@ -81,7 +81,7 @@ void UUpgradeComponent::BeginPlay()
 
 		UpgradeMap.Add(UpgradeType::JumpPower, [this]()
 			{
-				Server_SetMoveSpeedLevel(GetJumpPowerLevel() + 1);
+				Server_SetJumpPowerLevel(GetJumpPowerLevel() + 1);
 			});
 
 		UpgradeMap.Add(UpgradeType::AttackPower, [this]()
@@ -126,7 +126,7 @@ void UUpgradeComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void UUpgradeComponent::Server_SetMoveSpeedLevel_Implementation(int32 InMoveSpeedLevel)
 {
 	MoveSpeedLevel = InMoveSpeedLevel;
-	SetMoveSpeedMultiplier(1.0f + MoveSpeedLevel * 0.2f);
+	SetMoveSpeedMultiplier(1.0f + MoveSpeedLevel * 0.4f);
 
 	if (Player && GetOwner()->HasAuthority())
 	{
@@ -137,7 +137,7 @@ void UUpgradeComponent::Server_SetMoveSpeedLevel_Implementation(int32 InMoveSpee
 void UUpgradeComponent::Server_SetJumpPowerLevel_Implementation(int32 InJumpPowerLevel)
 {
 	JumpPowerLevel = InJumpPowerLevel;
-	SetJumpPowerMultiplier(1.0f + JumpPowerLevel * 0.4f);
+	SetJumpPowerMultiplier(1.0f + JumpPowerLevel * 0.2f);
 }
 
 void UUpgradeComponent::Server_SetAttackPowerLevel_Implementation(int32 InAttackPowerLevel)
@@ -155,7 +155,7 @@ void UUpgradeComponent::Server_SetAttackRangeLevel_Implementation(int32 InAttack
 void UUpgradeComponent::Server_SetExpLevel_Implementation(int32 InExpLevel)
 {
 	ExpLevel = InExpLevel;
-	SetExpMultiplier(1.0f + ExpLevel + 0.4f);
+	SetExpMultiplier(1.0f + ExpLevel * 0.4f);
 }
 
 void UUpgradeComponent::Server_SetOccupySpeedLevel_Implementation(int32 InOccupySpeedLevel)

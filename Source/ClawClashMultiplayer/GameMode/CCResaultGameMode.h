@@ -16,8 +16,10 @@ class CLAWCLASHMULTIPLAYER_API ACCResaultGameMode : public ACCGameModeBase
 {
 	GENERATED_BODY()
 	
+protected:
 	virtual void BeginPlay() override;
 
+protected:
 	UFUNCTION(Reliable, Server)
 	void Server_SendGameResult(const FString& UserId, const FString& Opponent, const FString& MyTeam, const FString& WinStatus, const FString& RedScore, const FString& BlueScore);
 	void Server_SendGameResult_Implementation(const FString& UserId, const FString& Opponent, const FString& MyTeam, const FString& WinStatus, const FString& RedScore, const FString& BlueScore);
@@ -25,4 +27,7 @@ class CLAWCLASHMULTIPLAYER_API ACCResaultGameMode : public ACCGameModeBase
 	void OnGameResultResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	FString TeamEnumToString(EPlayerTeam Team);
+
+protected:
+	virtual void Logout(AController* Exiting) override;
 };

@@ -141,39 +141,30 @@ void ACCPaperPlayer::Tick(float DeltaTime)
 		case EPlayerState::Idle:
 			UpdateIdle();
 			break;
-
 		case EPlayerState::ReadyJump:
 			UpdateReadyJump(DeltaTime);
 			break;
-
 		case EPlayerState::KeepReadyJump:
 			UpdateKeepReadyJump(DeltaTime);
 			break;
-
 		case EPlayerState::Jump:
 			UpdateJump();
 			break;
-
 		case EPlayerState::Move:
 			UpdateMove();
 			break;
-
 		case EPlayerState::Land:
 			UpdateLand();
 			break;
-
 		case EPlayerState::Falling:
 			UpdateFalling();
 			break;
-
 		case EPlayerState::KeepFalling:
 			UpdateKeepFalling();
 			break;
-
 		case EPlayerState::Attack:
 			UpdateAttack();
 			break;
-
 		default:
 			break;
 		}
@@ -553,20 +544,25 @@ void ACCPaperPlayer::BackToRespawnPos()
 			}
 		}
 
-		Multicast_SetNormalSprite();
-
 		if (FoundPlayerSpawner != nullptr)
 		{
 			PlayerSpawner = FoundPlayerSpawner;
 			SetActorLocation(FoundPlayerSpawner->GetActorLocation());
 			Client_EnableInput();
-			GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCBlockedPlayer"));
+			FTimerHandle ResetPlayerCollisionTimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(ResetPlayerCollisionTimerHandle, this, &ACCPaperPlayer::ResetPlayerCollision, 1.0f, false);
 		}
 
 		HealthComponent->GetHeal(HealthComponent->GetMaxHp());
 
 		SetCurrentState(EPlayerState::Idle);
 	}
+}
+
+void ACCPaperPlayer::ResetPlayerCollision()
+{
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("CCBlockedPlayer"));
+	Multicast_SetNormalSprite();
 }
 
 void ACCPaperPlayer::Client_ShowDeathWidget_Implementation()

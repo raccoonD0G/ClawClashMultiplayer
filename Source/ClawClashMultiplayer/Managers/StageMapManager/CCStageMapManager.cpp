@@ -50,6 +50,8 @@ void UCCStageMapManager::Init()
     bIsColliderGenerated = false;
     bIsSpriteGenerated = false;
 
+    StageMap = nullptr;
+
     InitStageMapInfo();
 }
 

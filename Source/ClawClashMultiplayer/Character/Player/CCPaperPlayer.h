@@ -188,6 +188,8 @@ public:
 	FORCEINLINE void AddAttackRangeMultipliers(TFunction<float()> Func) { AttackRangeMultipliers.Add(Func); }
 	FORCEINLINE void AddOccupySpeedMultipliers(TFunction<float()> Func) { OccupySpeedMultipliers.Add(Func); }
 
+	FORCEINLINE const TArray<TFunction<float()>>& GetOccupySpeedMultipliers() const { return OccupySpeedMultipliers; }
+
 // Attack Section
 public:
 	FORCEINLINE virtual float GetNormalAttackPower() override { return NormalAttackPower; }
@@ -230,6 +232,8 @@ protected:
 	void Server_Respawn_Implementation();
 
 	void BackToRespawnPos();
+
+	void ResetPlayerCollision();
 
 	UFUNCTION(Client, Reliable)
 	void Client_ShowDeathWidget();

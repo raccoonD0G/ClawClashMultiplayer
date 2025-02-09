@@ -50,4 +50,7 @@ protected:
     EPlayerTeam WinnerTeam;
     int32 BlueScore;
     int32 RedScore;
+
+public:
+    void ResetGameInstance();
 };
